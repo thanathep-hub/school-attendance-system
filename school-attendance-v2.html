@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<title>ระบบเช็คชื่อโรงเรียน — รร.บ้านหนองบัว</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<style>
+/* Design tokens — Government Clean + Bai Jamjuree
+   See tokens.css notes. Slimmer copy for v2. */
+@import url('https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #F1F4FA;
+  --surface: #FFFFFF;
+  --surface-2: #F8FAFC;
+  --surface-3: #EEF2F7;
+  --overlay: rgba(15, 23, 42, 0.45);
+  --border: #E4E8F0;
+  --border-strong: #CBD5E1;
+  --divider: #EEF2F7;
+  --text: #0B1F3F;
+  --text-strong: #061226;
+  --text-muted: #475569;
+  --text-subtle: #94A3B8;
+  --text-on-primary: #FFFFFF;
+  --primary: #1E47A3;
+  --primary-hover: #163680;
+  --primary-active: #112B69;
+  --primary-soft: #DCE6F8;
+  --primary-soft-strong: #B7CAF0;
+  --primary-tint: #F0F4FC;
+  --accent: #B58A2B;
+  --accent-soft: #FBF3DD;
+  --present: #15803D;
+  --present-soft: #DCFCE7;
+  --present-strong: #166534;
+  --absent: #B91C1C;
+  --absent-soft: #FEE2E2;
+  --absent-strong: #991B1B;
+  --leave: #B45309;
+  --leave-soft: #FEF3C7;
+  --leave-strong: #92400E;
+  --late: #C2410C;
+  --late-soft: #FFEDD5;
+  --late-strong: #9A3412;
+  --line: #06C755;
+  --line-dark: #04A848;
+  --line-bg: #8CABD8;
+  --r-xs: 6px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-pill: 9999px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 8px 16px rgba(15, 23, 42, 0.06), 0 24px 48px rgba(15, 23, 42, 0.12);
+  --shadow-xl: 0 32px 64px rgba(15, 23, 42, 0.18);
+  --font-sans: 'Bai Jamjuree', 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --ease: cubic-bezier(0.2, 0.7, 0.25, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms; --dur: 200ms; --dur-slow: 320ms;
+}
+:root[data-theme="dark"] {
+  --bg: #0A1226; --surface: #121C36; --surface-2: #18254A; --surface-3: #1F2D5A;
+  --overlay: rgba(0, 0, 0, 0.6); --border: #243260; --border-strong: #2F4180; --divider: #1B2647;
+  --text: #E8EEFB; --text-strong: #FFFFFF; --text-muted: #A4B0CC; --text-subtle: #6E7CA3;
+  --primary: #5B8DEF; --primary-hover: #7BA3F5; --primary-active: #4172D6;
+  --primary-soft: #1B2F60; --primary-soft-strong: #25408A; --primary-tint: #142042;
+  --accent: #E4C168; --accent-soft: #2A2418;
+  --present: #4ADE80; --present-soft: #0F2B1A; --present-strong: #86EFAC;
+  --absent: #F87171; --absent-soft: #2A1217; --absent-strong: #FCA5A5;
+  --leave: #FBBF24; --leave-soft: #2A2010; --leave-strong: #FCD34D;
+  --late: #FB923C; --late-soft: #2A1A10; --late-strong: #FDBA74;
+  --line: #06C755; --line-bg: #1A2540;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.2);
+  --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,.4), 0 24px 48px rgba(0,0,0,.5);
+  --shadow-xl: 0 32px 64px rgba(0,0,0,.6);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: var(--font-sans); color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; color: inherit; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: var(--r-md); border: 1px solid transparent; background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 500; line-height: 1; transition: background var(--dur) var(--ease); }
+.btn:hover { background: var(--surface-3); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-outline { background: transparent; border-color: var(--border-strong); }
+.btn-outline:hover { background: var(--surface-2); }
+.btn-ghost { background: transparent; }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn-danger { background: var(--absent); color: #fff; }
+.btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn-lg { height: 48px; padding: 0 22px; font-size: 15px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Status pill */
+.status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--r-pill); font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap; }
+.status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status[data-s="present"] { background: var(--present-soft); color: var(--present-strong); }
+.status[data-s="absent"]  { background: var(--absent-soft);  color: var(--absent-strong); }
+.status[data-s="leave"]   { background: var(--leave-soft);   color: var(--leave-strong); }
+.status[data-s="late"]    { background: var(--late-soft);    color: var(--late-strong); }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-muted); font-size: 12px; font-weight: 500; border: 1px solid var(--border); }
+.chip.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+.chip.primary { background: var(--primary-soft); color: var(--primary); border-color: transparent; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); }
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: translateY(0);} }
+@keyframes fade-in-no-y { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fade-in var(--dur-slow) var(--ease-out) both; }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.4; transform: scale(0.85);} }
+.pulse-dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* Hide scrollbars */
+.scroll-y::-webkit-scrollbar, .scroll-x::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-y::-webkit-scrollbar-thumb, .scroll-x::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+.scroll-y::-webkit-scrollbar-track, .scroll-x::-webkit-scrollbar-track { background: transparent; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+</style>
+<style>
+/* layout.css — app shell + reusable components for v2 prototype */
+
+/* ─── Shell ─── */
+.app-shell { display: flex; min-height: 100vh; background: var(--bg); color: var(--text); }
+.app-shell.is-mobile { flex-direction: column; }
+.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.main-content { flex: 1; overflow-y: auto; }
+
+/* ─── Sidebar (desktop) ─── */
+.sb { width: 244px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; position: sticky; top: 0; }
+.sb-brand { padding: 18px 18px 14px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.sb-logo { width: 38px; height: 38px; border-radius: 9px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.sb-brand-nm { font-size: 14px; font-weight: 700; line-height: 1.25; }
+.sb-brand-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.sb-scroll { flex: 1; overflow-y: auto; padding-bottom: 12px; }
+.sb-section { padding: 14px 12px 4px; font-size: 11px; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; }
+.sb-link { display: flex; align-items: center; gap: 11px; padding: 9px 14px; margin: 1px 8px; border-radius: 9px; font-size: 14px; color: var(--text-muted); font-weight: 500; cursor: pointer; transition: all var(--dur); border: none; background: none; width: calc(100% - 16px); text-align: left; font-family: inherit; }
+.sb-link:hover { background: var(--surface-2); color: var(--text); }
+.sb-link.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.sb-link-icon { display: inline-flex; width: 19px; height: 19px; flex-shrink: 0; }
+.sb-link-icon svg { width: 100%; height: 100%; }
+.sb-badge { margin-left: auto; background: var(--absent); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; min-width: 18px; text-align: center; }
+.sb-foot { padding: 12px 14px 14px; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+.sb-theme { display: flex; align-items: center; gap: 11px; padding: 8px 12px; background: var(--surface-2); border: none; border-radius: 8px; font-size: 13px; color: var(--text-muted); font-family: inherit; font-weight: 500; cursor: pointer; }
+.sb-theme:hover { background: var(--surface-3); }
+.sb-user { display: flex; gap: 10px; align-items: center; padding: 4px 4px; }
+.sb-user-card { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 9px; }
+.sb-user-card:hover { background: var(--surface-2); }
+.sb-logout-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: 7px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: all var(--dur); }
+.sb-logout-btn:hover { background: var(--absent-soft); color: var(--absent); }
+.sb-logout-btn svg { width: 16px; height: 16px; }
+.sb-user-nm { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.sb-user-role { font-size: 11px; color: var(--text-muted); }
+
+/* ─── Mobile bottom-nav ─── */
+.mob-tab { display: flex; background: var(--surface); border-top: 1px solid var(--border); padding: 4px 0 calc(8px + env(safe-area-inset-bottom)); position: sticky; bottom: 0; z-index: 10; }
+.mob-tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; background: none; border: none; font-size: 11px; font-weight: 500; color: var(--text-subtle); font-family: inherit; }
+.mob-tab-btn.active { color: var(--primary); }
+.mob-tab-btn svg { width: 22px; height: 22px; }
+.mob-tab-badge { position: absolute; top: -3px; right: -8px; background: var(--absent); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 99px; min-width: 16px; text-align: center; line-height: 1.3; }
+
+/* ─── Mobile topbar ─── */
+.mob-topbar { display: flex; align-items: center; padding: 14px 16px 12px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.mob-topbar-title { flex: 1; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.mob-topbar-btn { width: 34px; height: 34px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.mob-topbar-btn svg { width: 20px; height: 20px; }
+
+/* ─── Sheet (bottom sheet) ─── */
+.sheet-backdrop { position: fixed; inset: 0; background: var(--overlay); z-index: 100; animation: fade-in-no-y var(--dur) var(--ease-out); display: flex; align-items: flex-end; }
+.sheet { width: 100%; background: var(--surface); border-radius: 20px 20px 0 0; padding: 8px 0 calc(20px + env(safe-area-inset-bottom)); animation: sheet-up var(--dur-slow) var(--ease-out); max-height: 85vh; display: flex; flex-direction: column; }
+.sheet-handle { width: 44px; height: 4px; background: var(--border-strong); border-radius: 99px; margin: 8px auto 14px; }
+.sheet-title { font-size: 17px; font-weight: 700; padding: 0 20px 8px; }
+.sheet-link { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: none; border: none; font-family: inherit; font-size: 15px; color: var(--text); cursor: pointer; text-align: left; }
+.sheet-link:hover { background: var(--surface-2); }
+.sheet-link.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.sheet-link svg { width: 20px; height: 20px; }
+
+/* ─── Top bar (desktop) ─── */
+.page-topbar { height: 56px; padding: 0 28px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-shrink: 0; position: sticky; top: 0; z-index: 5; }
+.page-topbar .crumb { font-size: 13px; color: var(--text-muted); }
+.page-topbar .crumb strong { color: var(--text); }
+.page-topbar .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.page-topbar-search { height: 36px; min-width: 240px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; display: flex; align-items: center; gap: 8px; }
+.page-topbar-search input { flex: 1; height: 100%; border: none; outline: none; background: transparent; font-size: 13px; }
+.page-topbar-icon-btn { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; }
+.page-topbar-icon-btn svg { width: 18px; height: 18px; }
+.page-topbar-icon-btn:hover { background: var(--surface-3); color: var(--text); }
+
+/* ─── Page header ─── */
+.page-header { padding: 24px 28px 16px; display: flex; align-items: center; gap: 16px; }
+.page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1.2; }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.page-actions { display: flex; gap: 8px; align-items: center; }
+
+@media (max-width: 768px) {
+  .page-header { padding: 16px 16px 12px; }
+  .page-title { font-size: 19px; }
+}
+
+/* ─── Panel + cards ─── */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.panel-head { padding: 14px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+.panel-head h2 { font-size: 15px; font-weight: 700; margin: 0; }
+.panel-head .sub { font-size: 12px; color: var(--text-muted); margin-left: 4px; padding-left: 10px; border-left: 1px solid var(--border); }
+.panel-head .right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.panel-body { padding: 16px 18px; }
+.panel-body.flush { padding: 0; }
+
+/* ─── KPI cards ─── */
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; position: relative; overflow: hidden; }
+.kpi .lab { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.kpi .val { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.kpi .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* Avatar */
+.avatar-sm { width: 28px; height: 28px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+
+/* List row */
+.list-row { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--divider); transition: background var(--dur); cursor: pointer; }
+.list-row:last-child { border-bottom: none; }
+.list-row:hover { background: var(--surface-2); }
+.list-row.active { background: var(--primary-soft); }
+
+/* ─── Responsive overrides ─── */
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+@media (max-width: 1023px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block; }
+  .app-shell { flex-direction: column; }
+}
+
+</style>
+<style>
+/* components.css — page-specific styles for v2 */
+
+/* ─── Common page wrap ─── */
+.page-body { display: flex; flex-direction: column; }
+
+/* ─── Home page ─── */
+.home-wrap { padding: 0 28px 32px; }
+.home-welcome { display: flex; gap: 14px; align-items: center; padding: 4px 0 22px; }
+.welcome-av { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), var(--primary-active)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; flex-shrink: 0; }
+.welcome-h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+.welcome-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.home-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.home-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+.quick-card { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all var(--dur); text-align: left; font-family: inherit; color: inherit; }
+.quick-card:hover { background: var(--surface); border-color: var(--primary-soft-strong); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.qc-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.qc-icon svg { width: 18px; height: 18px; }
+.qc-icon.present { background: var(--present-soft); color: var(--present-strong); }
+.qc-icon.line { background: rgba(6, 199, 85, 0.15); color: var(--line); }
+.qc-nm { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.qc-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.dot-red { display: inline-block; width: 6px; height: 6px; background: var(--absent); border-radius: 50%; }
+
+.feed-mini { display: flex; flex-direction: column; }
+.feed-mini-row { display: flex; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--divider); align-items: flex-start; }
+.feed-mini-row:last-child { border-bottom: none; }
+.feed-mini-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.feed-mini-dot svg { width: 14px; height: 14px; }
+.feed-mini-dot.warn { background: var(--absent-soft); color: var(--absent); }
+.feed-mini-dot.info { background: var(--leave-soft); color: var(--leave); }
+.feed-mini-h { font-size: 13px; font-weight: 500; }
+.feed-mini-b { font-size: 11px; color: var(--text-muted); margin-top: 1px; line-height: 1.4; }
+.feed-mini-t { font-size: 11px; color: var(--text-subtle); flex-shrink: 0; white-space: nowrap; }
+.see-more-btn { width: 100%; padding: 10px; background: var(--surface-2); border: none; color: var(--primary); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-top: 1px solid var(--border); }
+
+@media (max-width: 1023px) {
+  .home-wrap { padding: 12px 16px 16px; }
+  .home-kpis { grid-template-columns: repeat(2, 1fr); }
+  .home-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Dashboard ─── */
+.dashboard-wrap { padding: 0 28px 32px; }
+.dashboard-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.dashboard-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+.kpi-alert { background: linear-gradient(135deg, var(--absent-soft) 0%, var(--surface) 70%); border-color: color-mix(in srgb, var(--absent) 18%, transparent); }
+.kpi-alert .val { color: var(--absent); }
+.quota-bar { height: 5px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.quota-bar > div { height: 100%; background: var(--primary); border-radius: 99px; }
+
+.room-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px 18px; }
+.room { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; transition: all var(--dur); }
+.room:hover { border-color: var(--primary-soft-strong); background: var(--surface); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.room-nm { font-size: 14px; font-weight: 700; }
+.room-t { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.room-r { display: flex; align-items: baseline; gap: 4px; margin-top: 10px; }
+.room-r .a { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.room-r .b { font-size: 11px; color: var(--text-muted); }
+.room-r .ok { margin-left: auto; font-size: 11px; color: var(--present-strong); font-weight: 600; }
+.room-r .bad-n { margin-left: auto; font-size: 11px; color: var(--absent); font-weight: 600; }
+.pct-bar { height: 4px; background: var(--border); border-radius: 99px; margin-top: 7px; overflow: hidden; }
+.pct-bar > div { height: 100%; background: var(--present); border-radius: 99px; transition: width var(--dur-slow) var(--ease-out); }
+.room.partial .pct-bar > div { background: var(--leave); }
+.room.bad .pct-bar > div { background: var(--absent); }
+
+.alert-item { padding: 12px 18px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--divider); }
+.alert-item:last-child { border-bottom: none; }
+
+@media (max-width: 1023px) {
+  .dashboard-wrap { padding: 12px 16px 24px; }
+  .dashboard-kpis { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .room-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── Modal ─── */
+.modal-backdrop { position: fixed; inset: 0; background: var(--overlay); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fade-in-no-y var(--dur); }
+.modal { width: 100%; max-width: 560px; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow-xl); overflow: hidden; animation: sheet-up var(--dur-slow) var(--ease-out); display: flex; flex-direction: column; max-height: 90vh; }
+.modal-sm { max-width: 380px; }
+.modal-head { padding: 18px 22px 14px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--border); }
+.modal-head-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-head-icon svg { width: 18px; height: 18px; }
+.modal-head h3 { margin: 0 0 2px; font-size: 17px; font-weight: 700; }
+.modal-head .sub { font-size: 13px; color: var(--text-muted); }
+.modal-close { margin-left: auto; width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+.modal-close svg { width: 16px; height: 16px; }
+.modal-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; background: var(--surface-2); align-items: center; }
+
+.ai-card { background: var(--primary-tint); border: 1px solid var(--primary-soft-strong); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+.ai-card-l { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.ai-card-l svg { width: 12px; height: 12px; }
+.ta-wrap { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); transition: border-color var(--dur); }
+.ta-wrap:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.ta-wrap textarea { width: 100%; min-height: 130px; border: none; outline: none; background: transparent; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.55; color: var(--text); resize: vertical; }
+.ta-tools { display: flex; align-items: center; gap: 8px; padding: 4px 8px 8px; border-top: 1px solid var(--divider); }
+.preview-line-bubble { background: var(--line); color: #fff; border-radius: 18px 18px 4px 18px; padding: 10px 14px; font-size: 13px; line-height: 1.55; max-width: 320px; box-shadow: var(--shadow-sm); white-space: pre-wrap; }
+
+/* ─── Students page ─── */
+.students-layout { display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding: 0 28px 32px; }
+.students-layout.mobile { display: block; padding: 0; }
+.students-list-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; height: calc(100vh - 200px); display: flex; flex-direction: column; }
+.students-layout.mobile .students-list-pane { height: auto; border-radius: 0; border-left: none; border-right: none; }
+.students-filter { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+.search-box { display: flex; align-items: center; gap: 8px; height: 36px; background: var(--surface-2); border-radius: 8px; padding: 0 12px; border: 1px solid var(--border); }
+.search-box svg { width: 14px; height: 14px; color: var(--text-subtle); }
+.search-box input { flex: 1; border: none; outline: none; background: transparent; font-size: 13px; }
+.students-filter select { height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font-size: 13px; outline: none; }
+.filter-tabs { display: flex; gap: 4px; }
+.filter-tabs button { padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-family: inherit; }
+.filter-tabs button.active { background: var(--text); color: var(--surface); }
+.students-list { flex: 1; overflow-y: auto; }
+.students-list .list-row svg { width: 14px; height: 14px; color: var(--text-subtle); }
+
+.students-detail-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; overflow-y: auto; }
+.students-layout.mobile .students-detail-pane { border-radius: 0; border-left: none; border-right: none; padding: 16px; }
+.back-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; font-family: inherit; margin-bottom: 14px; }
+.back-btn svg { width: 14px; height: 14px; }
+.sd-head { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid var(--divider); }
+.sd-avatar { width: 64px; height: 64px; border-radius: 16px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; flex-shrink: 0; }
+.sd-head h2 { font-size: 20px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+.sd-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.sd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+.ministat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.ministat .lab { font-size: 11px; color: var(--text-muted); }
+.ministat .val { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; line-height: 1.1; }
+.cal-grid { display: grid; grid-template-columns: repeat(11, 1fr); gap: 5px; }
+.cal-day { aspect-ratio: 1; border-radius: 6px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-muted); transition: transform var(--dur); }
+.cal-day:hover { transform: scale(1.15); z-index: 2; }
+.cal-day[data-s="present"] { background: var(--present-soft); color: var(--present-strong); }
+.cal-day[data-s="absent"]  { background: var(--absent-soft); color: var(--absent-strong); }
+.cal-day[data-s="leave"]   { background: var(--leave-soft); color: var(--leave-strong); }
+.cal-day[data-s="late"]    { background: var(--late-soft); color: var(--late-strong); }
+.cal-legend { display: flex; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+.cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.cal-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+.parent-card { padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+
+@media (max-width: 1023px) {
+  .students-layout { grid-template-columns: 1fr; padding: 0; }
+  .sd-stats { grid-template-columns: repeat(2, 1fr); }
+  .cal-grid { grid-template-columns: repeat(7, 1fr); }
+}
+
+/* ─── Attendance ─── */
+.attendance-page { display: flex; flex-direction: column; height: 100%; min-height: 100vh; background: var(--surface); position: relative; padding-bottom: 100px; }
+.attendance-page.mobile { padding-bottom: 100px; }
+.att-header { padding: 14px 16px 14px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; position: sticky; top: 0; z-index: 5; }
+.att-back { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.att-back svg { width: 18px; height: 18px; }
+.att-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.att-sub { font-size: 11px; color: var(--text-muted); }
+.att-period-select { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); font-size: 13px; font-family: inherit; outline: none; max-width: 220px; }
+.att-progress { padding: 14px 16px 12px; border-bottom: 1px solid var(--divider); }
+.att-progress-bar { display: flex; gap: 4px; height: 7px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.att-progress-bar .seg { transition: flex var(--dur-slow) var(--ease-out); }
+.att-counts { display: flex; gap: 14px; margin-top: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+.att-counts .item { display: inline-flex; align-items: center; gap: 5px; }
+.att-counts .item .d { width: 8px; height: 8px; border-radius: 50%; }
+.att-counts .item .n { font-weight: 700; color: var(--text); }
+.att-filters { display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto; align-items: center; border-bottom: 1px solid var(--divider); }
+.att-filters .chip { flex-shrink: 0; }
+.att-info-bar { padding: 9px 16px; background: var(--surface-2); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+.att-search { display: flex; align-items: center; gap: 8px; height: 38px; margin: 12px 16px 4px; padding: 0 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.att-search input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; }
+.att-search svg { width: 14px; height: 14px; color: var(--text-subtle); }
+.att-list { flex: 1; }
+.att-row { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--divider); background: var(--surface); }
+.att-row.alert { background: linear-gradient(90deg, color-mix(in srgb, var(--absent) 6%, var(--surface)), var(--surface) 40%); }
+.att-no { width: 28px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-muted); flex-shrink: 0; }
+.att-name { flex: 1; min-width: 0; }
+.att-name-n { font-size: 14px; font-weight: 500; line-height: 1.3; }
+.att-name-m { font-size: 11px; color: var(--text-subtle); margin-top: 2px; }
+.att-name-m.warn { color: var(--absent); }
+.seg-control { display: inline-flex; background: var(--surface-2); border-radius: 9px; padding: 3px; gap: 0; flex-shrink: 0; border: 1px solid var(--border); }
+.seg-btn { width: 38px; height: 30px; border: none; background: transparent; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-subtle); transition: all var(--dur); padding: 0; font-family: inherit; }
+.seg-btn[data-active="true"] { background: var(--surface); box-shadow: var(--shadow-sm); }
+.seg-btn[data-active="true"][data-s="present"] { color: var(--present-strong); }
+.seg-btn[data-active="true"][data-s="absent"]  { color: var(--absent-strong); background: var(--absent-soft); }
+.seg-btn[data-active="true"][data-s="leave"]   { color: var(--leave-strong); background: var(--leave-soft); }
+.seg-btn[data-active="true"][data-s="late"]    { color: var(--late-strong); background: var(--late-soft); }
+.att-note-row { padding: 0 16px 10px; background: var(--surface); border-bottom: 1px solid var(--divider); }
+.att-note-row input { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); font-size: 13px; outline: none; font-family: inherit; }
+.att-cta-dock { position: sticky; bottom: 0; left: 0; right: 0; padding: 12px 16px 16px; background: linear-gradient(to top, var(--surface) 60%, transparent); margin-top: auto; }
+.att-cta { width: 100%; height: 52px; border-radius: 12px; background: var(--primary); color: #fff; border: none; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 35%, transparent); font-family: inherit; cursor: pointer; }
+.att-cta:disabled { opacity: 0.45; cursor: not-allowed; }
+.att-cta .badge { background: rgba(255, 255, 255, 0.22); padding: 3px 8px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+.att-cta svg { width: 18px; height: 18px; }
+.att-success { position: fixed; inset: 0; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; z-index: 200; animation: fade-in var(--dur-slow) var(--ease-out); }
+.att-success-check { width: 96px; height: 96px; background: var(--present-soft); color: var(--present-strong); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+.att-success h2 { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
+.att-success p { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.6; }
+.att-success-stat { background: var(--surface-2); padding: 12px; border-radius: 10px; text-align: center; }
+.att-success-stat .n { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.att-success-stat .l { font-size: 12px; color: var(--text-muted); }
+
+@media (max-width: 480px) {
+  .att-period-select { max-width: 130px; font-size: 12px; }
+}
+
+/* ─── Classrooms ─── */
+.room-bigtable { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.room-big { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; cursor: pointer; transition: all var(--dur); }
+.room-big:hover { border-color: var(--primary-soft-strong); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.room-big.active { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.room-big-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.room-big-nm { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.room-big-cnt { font-size: 11px; color: var(--text-muted); }
+.room-big-t { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+.room-big-stat { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
+.room-big-stat .big-n { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.room-big-stat .big-d { font-size: 13px; color: var(--text-muted); }
+.room-big-stat .ok { margin-left: auto; font-size: 12px; color: var(--present-strong); font-weight: 600; }
+.room-big-stat .bad-n { margin-left: auto; font-size: 12px; color: var(--absent); font-weight: 600; }
+
+@media (max-width: 1023px) {
+  .room-bigtable { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .room-bigtable { grid-template-columns: 1fr; }
+}
+
+/* ─── Parents · LINE ─── */
+.parents-layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 0 28px 32px; }
+.parents-layout.mobile { display: block; padding: 0; }
+.parents-list-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; height: calc(100vh - 200px); display: flex; flex-direction: column; }
+.parents-layout.mobile .parents-list-pane { height: auto; border-radius: 0; border-left: none; border-right: none; }
+.parents-search { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+.parents-list { flex: 1; overflow-y: auto; }
+.chat-list-row { padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; cursor: pointer; border-bottom: 1px solid var(--divider); transition: background var(--dur); }
+.chat-list-row:hover { background: var(--surface-2); }
+.chat-list-row.active { background: var(--primary-soft); }
+.chat-list-h { display: flex; justify-content: space-between; align-items: center; }
+.chat-list-time { font-size: 11px; color: var(--text-subtle); }
+.chat-list-snippet { font-size: 12px; color: var(--text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.chat-unread { margin-left: auto; flex-shrink: 0; background: var(--absent); color: #fff; padding: 1px 6px; border-radius: 99px; font-size: 10px; font-weight: 700; min-width: 16px; text-align: center; }
+
+.parents-chat-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; flex-direction: column; height: calc(100vh - 200px); overflow: hidden; }
+.parents-layout.mobile .parents-chat-pane { height: calc(100vh - 60px); border-radius: 0; border: none; }
+.chat-head { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.btn-icon-32 { width: 36px; height: 36px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.ai-banner { background: var(--primary-tint); color: var(--text); padding: 8px 14px; font-size: 12px; border-bottom: 1px solid var(--primary-soft-strong); display: flex; gap: 6px; align-items: center; }
+.ai-banner svg { width: 12px; height: 12px; color: var(--primary); flex-shrink: 0; }
+.chat-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--line-bg); }
+.chat-date { text-align: center; align-self: center; background: rgba(0,0,0,0.18); color: #fff; font-size: 11px; padding: 3px 12px; border-radius: 99px; font-weight: 500; }
+.chat-system { background: #fff8e1; color: #6e4a00; border: 1px dashed #d4a020; padding: 7px 12px; border-radius: 10px; font-size: 12px; align-self: center; max-width: 90%; text-align: center; }
+.chat-system.ai { background: var(--primary-soft); border-color: var(--primary-soft-strong); color: var(--primary); display: inline-flex; align-items: center; gap: 5px; }
+.chat-system.ai svg { width: 12px; height: 12px; }
+.chat-msg { max-width: 78%; padding: 8px 12px; font-size: 13px; line-height: 1.55; border-radius: 16px; box-shadow: 0 1px 1px rgba(0,0,0,0.08); white-space: pre-wrap; }
+.chat-msg.in { background: #fff; color: var(--text); border-bottom-left-radius: 4px; align-self: flex-start; }
+.chat-msg.out { background: var(--line); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+.chat-time { font-size: 10px; opacity: 0.8; margin-top: 3px; text-align: right; }
+.chat-suggest { padding: 8px 14px; background: var(--primary-tint); border-top: 1px solid var(--primary-soft-strong); }
+.chat-suggest .lab { display: flex; align-items: center; gap: 5px; color: var(--primary); font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+.chat-suggest .lab svg { width: 12px; height: 12px; }
+.chat-suggest .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chat-suggest .chips button { background: var(--surface); border: 1px solid var(--primary-soft-strong); border-radius: 99px; padding: 5px 10px; font-size: 12px; color: var(--primary); cursor: pointer; font-family: inherit; }
+.chat-suggest .chips button:hover { background: var(--primary-soft); }
+.chat-input { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--surface); }
+.chat-input textarea { flex: 1; min-height: 36px; max-height: 100px; padding: 8px 12px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--border); font-family: inherit; font-size: 13px; outline: none; resize: none; }
+.chat-send { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.chat-send svg { width: 16px; height: 16px; }
+.chat-send:disabled { background: var(--border-strong); cursor: not-allowed; }
+
+@media (max-width: 1023px) {
+  .parents-layout { grid-template-columns: 1fr; padding: 0; }
+}
+
+/* ─── Reports ─── */
+.reports-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.report-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; gap: 14px; align-items: center; }
+.report-card.primary { border-color: var(--primary); background: linear-gradient(135deg, var(--primary-tint), var(--surface) 70%); }
+.report-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.report-icon svg { width: 20px; height: 20px; }
+.report-nm { font-size: 15px; font-weight: 600; }
+.report-d { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.report-meta { font-size: 11px; color: var(--text-subtle); margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
+.report-card .btn { flex-shrink: 0; }
+
+/* ─── Notifications ─── */
+.notif-row { padding: 14px 18px; display: flex; gap: 14px; align-items: flex-start; border-bottom: 1px solid var(--divider); }
+.notif-row:last-child { border-bottom: none; }
+.notif-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.notif-icon.warn { background: var(--absent-soft); color: var(--absent); }
+.notif-icon.info { background: var(--leave-soft); color: var(--leave); }
+.notif-icon svg { width: 16px; height: 16px; }
+.notif-h { font-size: 14px; font-weight: 600; }
+.notif-b { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+.notif-t { font-size: 11px; color: var(--text-subtle); flex-shrink: 0; white-space: nowrap; }
+
+/* ─── Settings ─── */
+.tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
+.tab-btn { padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit; white-space: nowrap; }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.set-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 12px; font-weight: 600; }
+.field input, .field select { height: 40px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); font-family: inherit; font-size: 14px; outline: none; transition: all var(--dur); }
+.field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+.data-table { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.data-table-head, .data-table-row { display: grid; grid-template-columns: 40px 2fr 2fr 1fr 100px 60px; gap: 10px; align-items: center; padding: 10px 14px; font-size: 13px; }
+.data-table-head { background: var(--surface-2); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+.data-table-row { border-bottom: 1px solid var(--divider); }
+.data-table-row:last-child { border-bottom: none; }
+
+.subj-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+.subj-sw { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+
+.line-status-card { background: linear-gradient(135deg, rgba(6,199,85,0.06), var(--surface) 70%); border: 1px solid rgba(6,199,85,0.18); border-radius: 14px; padding: 18px 20px; display: flex; gap: 16px; align-items: center; }
+.line-icon { width: 56px; height: 56px; border-radius: 14px; background: var(--line); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+
+@media (max-width: 1023px) {
+  .set-form .form-row { grid-template-columns: 1fr; }
+  .data-table-head { display: none; }
+  .data-table-row { grid-template-columns: 40px 1fr 90px; padding: 10px 14px; }
+  .data-table-row > div:nth-child(3),
+  .data-table-row > div:nth-child(4) { display: none; }
+}
+
+/* ─── Login page ─── */
+.login-page { min-height: 100vh; display: flex; background: var(--bg); }
+.login-hero { flex: 1; min-width: 0; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-active) 100%); color: #fff; padding: 56px 60px; display: flex; align-items: center; position: relative; overflow: hidden; }
+.login-hero::before { content: ''; position: absolute; top: -120px; right: -120px; width: 400px; height: 400px; background: rgba(255,255,255,0.06); border-radius: 50%; }
+.login-hero::after { content: ''; position: absolute; bottom: -80px; left: -80px; width: 280px; height: 280px; background: rgba(255,255,255,0.04); border-radius: 50%; }
+.login-hero-inner { position: relative; z-index: 1; max-width: 520px; }
+.login-logo { width: 56px; height: 56px; border-radius: 14px; background: rgba(255,255,255,0.18); backdrop-filter: blur(4px); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
+.login-logo.small { width: 44px; height: 44px; font-size: 14px; background: var(--primary); border: none; color: #fff; }
+.login-h1 { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 18px; }
+.login-p { font-size: 15px; line-height: 1.7; margin: 0 0 30px; opacity: 0.88; max-width: 480px; }
+.login-feat-list { list-style: none; padding: 0; margin: 0 0 36px; display: flex; flex-direction: column; gap: 10px; }
+.login-feat-list li { font-size: 14px; display: flex; align-items: center; gap: 10px; opacity: 0.92; }
+.login-feat-list .dot { width: 6px; height: 6px; background: #fff; border-radius: 50%; opacity: 0.7; }
+.login-foot-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; opacity: 0.7; }
+
+.login-form-col { width: 520px; display: flex; align-items: center; justify-content: center; padding: 40px 32px; background: var(--surface); flex-shrink: 0; }
+.login-form-wrap { width: 100%; max-width: 380px; }
+.login-form-head { display: flex; gap: 14px; align-items: center; margin-bottom: 24px; }
+.login-form-h { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.login-form-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.login-quick { margin-bottom: 6px; }
+.login-quick-l { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+.login-quick-grid { display: flex; flex-direction: column; gap: 6px; }
+.login-quick-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; transition: all var(--dur); font-family: inherit; color: inherit; }
+.login-quick-card:hover { background: var(--surface); border-color: var(--primary-soft-strong); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.login-quick-card svg { width: 14px; height: 14px; color: var(--text-subtle); flex-shrink: 0; }
+.login-quick-av { width: 32px; height: 32px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.login-form { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+.login-role-tabs { display: flex; gap: 6px; }
+.login-role-tabs button { flex: 1; padding: 10px 12px; font-size: 13px; font-weight: 500; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); border-radius: 9px; cursor: pointer; font-family: inherit; transition: all var(--dur); }
+.login-role-tabs button.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+.login-form .field input { height: 44px; }
+.login-error { background: var(--absent-soft); color: var(--absent-strong); padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; border-left: 3px solid var(--absent); }
+.login-submit { margin-top: 4px; }
+.login-meta-foot { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--divider); font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+.login-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 1023px) {
+  .login-hero { display: none; }
+  .login-form-col { flex: 1; width: 100%; max-width: 100%; padding: 32px 20px; }
+  .login-form-wrap { max-width: 440px; }
+}
+
+</style>
+<script>
+  (function(){ try { var t = localStorage.getItem('v2_theme'); if (t==='dark') document.documentElement.setAttribute('data-theme','dark'); } catch(e){} })();
+</script>
+</head>
+<body>
+  <div id="root">
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#475569;font-family:system-ui">
+      กำลังโหลด…
+    </div>
+  </div>
+
+  <script>
+// MOCK DATA — comprehensive simulation for ระบบเช็คชื่อโรงเรียน
+// Exposed on `window.D` so plain <script> can load it before babel boots.
+
+window.D = (function() {
+  // ─── School ─────────────────────────────────────────
+  const SCHOOL = {
+    name: 'โรงเรียนบ้านหนองบัว',
+    short: 'รร.บ้านหนองบัว',
+    code: '1030200001',
+    province: 'นครราชสีมา',
+    district: 'เมืองนครราชสีมา',
+    director: 'นางสมหญิง ใจดี',
+    semester: 'ภาคเรียนที่ 2 ปีการศึกษา 2568',
+    semesterShort: '2/2568',
+    todayLabel: 'วันจันทร์ที่ 25 พฤษภาคม 2569',
+    today: '2569-05-25',
+    lineQuotaUsed: 1842,
+    lineQuotaTotal: 5000,
+    studentTotal: 187,
+    teacherTotal: 14,
+    classroomTotal: 8,
+  };
+
+  // ─── Teachers ───────────────────────────────────────
+  const TEACHERS = [
+    { id: 1, initials: 'สญ', fname: 'สมหญิง',  lname: 'ใจดี',       role: 'admin',   subject: 'ผู้อำนวยการ', phone: '081-xxx-1000', color: '#B58A2B', online: true },
+    { id: 2, initials: 'พท', fname: 'พรทิพย์', lname: 'สวัสดี',      role: 'teacher', subject: 'ภาษาไทย · ป.3/1 (ครูประจำชั้น)', phone: '081-xxx-1001', color: '#1E47A3', online: true },
+    { id: 3, initials: 'สด', fname: 'สุดา',    lname: 'แสงดี',       role: 'teacher', subject: 'คณิตศาสตร์ · ป.3/2 (ครูประจำชั้น)', phone: '081-xxx-1002', color: '#B91C1C', online: false },
+    { id: 4, initials: 'ปว', fname: 'ประวิทย์', lname: 'มากมี',      role: 'teacher', subject: 'วิทยาศาสตร์ · ป.4/1 (ครูประจำชั้น)', phone: '081-xxx-1003', color: '#15803D', online: true },
+    { id: 5, initials: 'มล', fname: 'มาลี',    lname: 'ทองดี',       role: 'teacher', subject: 'ภาษาอังกฤษ · ป.2/1 (ครูประจำชั้น)', phone: '081-xxx-1004', color: '#6D28D9', online: true },
+    { id: 6, initials: 'วด', fname: 'วันดี',   lname: 'จันทร์เพ็ญ', role: 'teacher', subject: 'ป.1/1 (ครูประจำชั้น)', phone: '081-xxx-1005', color: '#0E7490', online: false },
+    { id: 7, initials: 'สพ', fname: 'สมพร',   lname: 'รัตนชัย',     role: 'teacher', subject: 'ป.5/1 (ครูประจำชั้น)', phone: '081-xxx-1006', color: '#BE185D', online: true },
+    { id: 8, initials: 'สช', fname: 'สมชาย',   lname: 'ใจกล้า',      role: 'teacher', subject: 'ป.5/2 (ครูประจำชั้น)', phone: '081-xxx-1007', color: '#0F766E', online: false },
+    { id: 9, initials: 'อพ', fname: 'อำพร',    lname: 'พรหมศิริ',    role: 'teacher', subject: 'ป.6/1 (ครูประจำชั้น)', phone: '081-xxx-1008', color: '#7C2D12', online: true },
+    { id:10, initials: 'นภ', fname: 'นภา',    lname: 'แก้วใส',      role: 'teacher', subject: 'พลศึกษา', phone: '081-xxx-1009', color: '#0369A1', online: true },
+    { id:11, initials: 'รต', fname: 'รัตนา',   lname: 'สงวนวงศ์',   role: 'teacher', subject: 'ศิลปะ', phone: '081-xxx-1010', color: '#9333EA', online: false },
+    { id:12, initials: 'สม', fname: 'สมศักดิ์', lname: 'ไชยศรี',    role: 'teacher', subject: 'สังคมศึกษา', phone: '081-xxx-1011', color: '#15803D', online: true },
+    { id:13, initials: 'อท', fname: 'อรทัย',   lname: 'มากกว่า',     role: 'teacher', subject: 'ภาษาอังกฤษ', phone: '081-xxx-1012', color: '#B91C1C', online: false },
+    { id:14, initials: 'พน', fname: 'พนิดา',   lname: 'แสนดี',       role: 'teacher', subject: 'คอมพิวเตอร์', phone: '081-xxx-1013', color: '#1F2937', online: true },
+  ];
+
+  // ─── Subjects ───────────────────────────────────────
+  const SUBJECTS = [
+    { code: 'TH', name: 'ภาษาไทย',       color: '#1E47A3' },
+    { code: 'MA', name: 'คณิตศาสตร์',    color: '#B91C1C' },
+    { code: 'SC', name: 'วิทยาศาสตร์',   color: '#15803D' },
+    { code: 'SO', name: 'สังคมศึกษา',    color: '#B45309' },
+    { code: 'EN', name: 'ภาษาอังกฤษ',    color: '#6D28D9' },
+    { code: 'AR', name: 'ศิลปะ',         color: '#BE185D' },
+    { code: 'PE', name: 'พลศึกษา',       color: '#0E7490' },
+    { code: 'CO', name: 'คอมพิวเตอร์',   color: '#1F2937' },
+  ];
+
+  // ─── Classrooms ─────────────────────────────────────
+  const CLASSROOMS = [
+    { id: 'p1-1', name: 'ป.1/1', grade: 1, count: 24, present: 24, teacherId: 6 },
+    { id: 'p2-1', name: 'ป.2/1', grade: 2, count: 26, present: 23, teacherId: 5 },
+    { id: 'p3-1', name: 'ป.3/1', grade: 3, count: 25, present: 22, teacherId: 2 },
+    { id: 'p3-2', name: 'ป.3/2', grade: 3, count: 22, present: 22, teacherId: 3 },
+    { id: 'p4-1', name: 'ป.4/1', grade: 4, count: 23, present: 21, teacherId: 4 },
+    { id: 'p5-1', name: 'ป.5/1', grade: 5, count: 24, present: 23, teacherId: 7 },
+    { id: 'p5-2', name: 'ป.5/2', grade: 5, count: 22, present: 20, teacherId: 8 },
+    { id: 'p6-1', name: 'ป.6/1', grade: 6, count: 21, present: 21, teacherId: 9 },
+  ];
+
+  // ─── Students (ป.3/1 — 25 คน, ใช้ในเช็คชื่อ Flow) ────────
+  // เด็กในห้องอื่นสร้างแบบสุ่ม สำหรับหน้านักเรียน
+  const STUDENTS_P3_1 = [
+    { no: 1,  prefix: 'ด.ช.', fname: 'ภูมินทร์',     lname: 'แก้วสุข',      },
+    { no: 2,  prefix: 'ด.ญ.', fname: 'กานต์ธิดา',    lname: 'ศรีสวัสดิ์',    },
+    { no: 3,  prefix: 'ด.ช.', fname: 'ธนกฤต',       lname: 'บุญมี',        },
+    { no: 4,  prefix: 'ด.ญ.', fname: 'ปริยากร',     lname: 'ทองดี',        },
+    { no: 5,  prefix: 'ด.ช.', fname: 'ณัฐภัทร',     lname: 'แสงทอง',       },
+    { no: 6,  prefix: 'ด.ญ.', fname: 'พิมพ์ชนก',    lname: 'เจริญสุข',      },
+    { no: 7,  prefix: 'ด.ช.', fname: 'กฤษฎา',       lname: 'รัตนชัย',      },
+    { no: 8,  prefix: 'ด.ญ.', fname: 'ปาณิสรา',    lname: 'วงศ์ใหญ่',      },
+    { no: 9,  prefix: 'ด.ช.', fname: 'ปุณยวีร์',    lname: 'ทรัพย์มาก',    },
+    { no: 10, prefix: 'ด.ญ.', fname: 'ณิชาภัทร',   lname: 'พรหมศิริ',     },
+    { no: 11, prefix: 'ด.ช.', fname: 'สรวิชญ์',    lname: 'ใจดี',         },
+    { no: 12, prefix: 'ด.ญ.', fname: 'อชิรญา',     lname: 'ขจรเกียรติ',    },
+    { no: 13, prefix: 'ด.ช.', fname: 'ปวริศ',       lname: 'มากมี',        absentStreak: 4, alert: true },
+    { no: 14, prefix: 'ด.ญ.', fname: 'ภัทรานิษฐ์',  lname: 'ผ่องใส',       },
+    { no: 15, prefix: 'ด.ช.', fname: 'ชยพล',       lname: 'สงวนวงศ์',     },
+    { no: 16, prefix: 'ด.ญ.', fname: 'กมลชนก',    lname: 'โพธิ์ทอง',     },
+    { no: 17, prefix: 'ด.ช.', fname: 'ธีรเดช',      lname: 'ไชยศรี',        },
+    { no: 18, prefix: 'ด.ญ.', fname: 'รินรดา',     lname: 'จันทร์เพ็ญ',    },
+    { no: 19, prefix: 'ด.ช.', fname: 'จิรภัทร',     lname: 'เอี่ยมศรี',     },
+    { no: 20, prefix: 'ด.ญ.', fname: 'ชญานิน',    lname: 'นาคทอง',       },
+    { no: 21, prefix: 'ด.ช.', fname: 'นันทิพัฒน์',  lname: 'สุขใจ',         },
+    { no: 22, prefix: 'ด.ญ.', fname: 'กัญญาพัชร', lname: 'แก้วใส',        },
+    { no: 23, prefix: 'ด.ช.', fname: 'ภาคิน',      lname: 'ปัญญาดี',      },
+    { no: 24, prefix: 'ด.ญ.', fname: 'ลภัสรดา',    lname: 'วิเศษศิลป์',    },
+    { no: 25, prefix: 'ด.ช.', fname: 'สิรภพ',      lname: 'พงศ์พันธุ์',    },
+  ];
+  STUDENTS_P3_1.forEach((s, i) => {
+    s.id = 'p3-1-' + (i+1);
+    s.classroomId = 'p3-1';
+    s.studentCode = '30' + String(2569100 + i).padStart(7, '0');
+    s.age = 8 + (i % 2);
+    s.absentStreak = s.absentStreak || 0;
+  });
+
+  // Sample of students from other classes (for "นักเรียน" page)
+  const otherStudentsRaw = [
+    ['ป.1/1', 'ด.ช.', 'อนันต์',   'รุ่งโรจน์'],
+    ['ป.1/1', 'ด.ญ.', 'พิชญา',   'ใจงาม'],
+    ['ป.2/1', 'ด.ช.', 'วรเมธ',    'ทองอยู่',  3, true],
+    ['ป.2/1', 'ด.ญ.', 'ปุณยนุช',  'สุขสวัสดิ์'],
+    ['ป.2/1', 'ด.ช.', 'ธีรภัทร',  'รัตนพร'],
+    ['ป.3/2', 'ด.ช.', 'กิตติพศ',  'แก้วเพชร'],
+    ['ป.3/2', 'ด.ญ.', 'อภิสรา',   'ทรัพย์แสง'],
+    ['ป.4/1', 'ด.ญ.', 'ณัฐนิชา',  'ดวงดี'],
+    ['ป.4/1', 'ด.ช.', 'ธนภัทร',  'สงเคราะห์'],
+    ['ป.5/1', 'ด.ญ.', 'พัชรพร',   'ใจกล้า'],
+    ['ป.5/1', 'ด.ช.', 'ภานุพงศ์', 'สุขเกษม'],
+    ['ป.5/2', 'ด.ญ.', 'ศรัณย์พร', 'แสงดี',    3, true],
+    ['ป.5/2', 'ด.ช.', 'นพดล',     'นรินทร์'],
+    ['ป.6/1', 'ด.ญ.', 'ธนพร',     'อยู่เย็น'],
+    ['ป.6/1', 'ด.ช.', 'อาทิตย์',  'สว่างไสว'],
+  ];
+  const OTHER_STUDENTS = otherStudentsRaw.map((r, i) => {
+    const [cls, prefix, fname, lname, streak, alert] = r;
+    const cId = CLASSROOMS.find(c => c.name === cls).id;
+    return { id: cId + '-x' + i, classroomId: cId, no: 30 + i, prefix, fname, lname,
+      studentCode: '30' + String(2569200 + i).padStart(7,'0'), age: 6 + (cls.match(/\d/)|0), absentStreak: streak || 0, alert: !!alert };
+  });
+  const ALL_STUDENTS = [...STUDENTS_P3_1, ...OTHER_STUDENTS];
+
+  // ─── Parents ─────────────────────────────────────────
+  // ผู้ปกครองหลัก 1 คนต่อนักเรียนในกลุ่ม alert + บางคน
+  const PARENTS = [
+    { id: 'pa-1',  studentId: 'p3-1-13', name: 'นางสมศรี มากมี',     relation: 'มารดา', phone: '081-xxx-2013', lineLinked: true,  lastMessage: 'ลูกป่วยอีกครับ พรุ่งนี้ขอลาต่อ', unread: 1, snippet_time: '14:22', online: true },
+    { id: 'pa-2',  studentId: 'p3-1-1',  name: 'นางสายฝน แก้วสุข',  relation: 'มารดา', phone: '085-xxx-1234', lineLinked: true,  lastMessage: 'ขอบคุณค่ะ พรุ่งนี้ถ้าไม่ไหวจะแจ้งล่วงหน้านะคะ', unread: 0, snippet_time: '09:02' },
+    { id: 'pa-3',  studentId: 'p3-1-5',  name: 'นายสมหมาย แสงทอง', relation: 'บิดา',  phone: '083-xxx-5678', lineLinked: true,  lastMessage: 'ลูกมาแล้วครับ ลืมเช็คอิน', unread: 0, snippet_time: '08:55' },
+    { id: 'pa-4',  studentId: 'p5-2-x11', name: 'นางวันเพ็ญ แสงดี',   relation: 'ยาย',   phone: '089-xxx-9012', lineLinked: true,  lastMessage: 'รับทราบค่ะ พรุ่งนี้พาน้องไปหาหมอก่อน', unread: 2, snippet_time: '11:30' },
+    { id: 'pa-5',  studentId: 'p2-1-x2', name: 'นายมานพ ทองอยู่',  relation: 'บิดา',  phone: '081-xxx-3456', lineLinked: true,  lastMessage: 'ลากิจครับ พาน้องไปต่างจังหวัด', unread: 0, snippet_time: 'เมื่อวาน' },
+    { id: 'pa-6',  studentId: 'p3-1-7',  name: 'นางพิมพ์ รัตนชัย',   relation: 'มารดา', phone: '084-xxx-7890', lineLinked: false, lastMessage: '— ยังไม่เคยส่งข้อความ —', unread: 0, snippet_time: '—' },
+    { id: 'pa-7',  studentId: 'p3-1-10', name: 'นายชัยพร พรหมศิริ', relation: 'บิดา',  phone: '083-xxx-1357', lineLinked: true,  lastMessage: 'ขอบคุณครูค่ะ', unread: 0, snippet_time: 'เมื่อวาน' },
+    { id: 'pa-8',  studentId: 'p3-1-2',  name: 'นางสาวพรพรรณ ศรีสวัสดิ์', relation: 'น้า',   phone: '082-xxx-2468', lineLinked: true,  lastMessage: 'ติดต่อกลับได้ที่เบอร์นี้นะคะ', unread: 0, snippet_time: '2 วันที่แล้ว' },
+  ];
+
+  // Chat threads (history per parent)
+  const CHATS = {
+    'pa-1': [
+      { kind: 'date', text: '25 พฤษภาคม' },
+      { from: 'system', text: '🔔 ระบบ — ด.ช.ปวริศ มากมี (ป.3/1) ไม่ได้เข้าเรียนคาบ 1 ภาษาไทย เวลา 08:30 น.', time: '08:35' },
+      { from: 'in', text: 'ลูกป่วยครับ เป็นไข้สูง', time: '08:42' },
+      { from: 'system-ai', text: 'AI ตีความ: ลาป่วย · บันทึกเป็นใบลาป่วยแล้ว' },
+      { from: 'out', text: 'รับทราบค่ะ ขอให้น้องหายเร็วๆ นะคะ 🙏', time: '08:45' },
+      { from: 'in', text: 'ลูกป่วยอีกครับ พรุ่งนี้ขอลาต่อ', time: '14:22' },
+    ],
+    'pa-2': [
+      { kind: 'date', text: '25 พฤษภาคม' },
+      { from: 'system', text: '🔔 ระบบ — ด.ช.ภูมินทร์ แก้วสุข (ป.3/1) ขาดเรียนคาบ 3', time: '10:45' },
+      { from: 'in', text: 'ลาป่วยค่ะ', time: '10:50' },
+      { from: 'system-ai', text: 'AI ตีความ: ลาป่วย · บันทึกแล้ว' },
+      { from: 'out', text: 'รับทราบค่ะ ขอให้น้องหายเร็วๆ นะคะ 🙏', time: '10:51' },
+      { from: 'in', text: 'ขอบคุณค่ะ พรุ่งนี้ถ้าไม่ไหวจะแจ้งล่วงหน้านะคะ', time: '09:02' },
+    ],
+    'pa-3': [
+      { kind: 'date', text: '25 พฤษภาคม' },
+      { from: 'system', text: '🔔 ระบบ — ด.ช.ณัฐภัทร แสงทอง ขาดคาบ 1', time: '08:34' },
+      { from: 'in', text: 'ลูกมาแล้วครับ ลืมเช็คอิน', time: '08:55' },
+      { from: 'out', text: 'รับทราบค่ะ ครูจะแก้ไขเป็น "มาสาย" ให้', time: '08:56' },
+    ],
+    'pa-4': [
+      { kind: 'date', text: 'เมื่อวาน' },
+      { from: 'system', text: '🔔 ระบบ — ด.ญ.ศรัณย์พร แสงดี ขาดเรียน', time: '08:35' },
+      { from: 'in', text: 'น้องไม่สบายครับ ไอเยอะมาก', time: '09:00' },
+      { from: 'out', text: 'รับทราบค่ะ แนะนำให้พบแพทย์นะคะ', time: '09:01' },
+      { kind: 'date', text: 'วันนี้' },
+      { from: 'out', text: 'น้องเป็นยังไงบ้างคะ? วันนี้ยังขาดอีกเหรอคะ', time: '11:00' },
+      { from: 'in', text: 'รับทราบค่ะ พรุ่งนี้พาน้องไปหาหมอก่อน', time: '11:30' },
+      { from: 'in', text: 'หมอบอกให้พักอีก 2 วัน', time: '11:31' },
+    ],
+    'pa-5': [
+      { kind: 'date', text: 'เมื่อวาน' },
+      { from: 'system', text: '🔔 ระบบ — ด.ช.วรเมธ ทองอยู่ ขาดเรียน', time: '08:30' },
+      { from: 'in', text: 'ลากิจครับ พาน้องไปต่างจังหวัด', time: '08:45' },
+      { from: 'system-ai', text: 'AI ตีความ: ลากิจ · บันทึกแล้ว' },
+      { from: 'out', text: 'รับทราบค่ะ', time: '08:46' },
+    ],
+  };
+
+  // ─── Schedule (ป.3/1 — full week) ────────────────────
+  const PERIODS = [
+    { no: 1, start: '08:30', end: '09:20' },
+    { no: 2, start: '09:20', end: '10:10' },
+    { no: 3, start: '10:30', end: '11:20' },
+    { no: 4, start: '11:20', end: '12:10' },
+    { no: 5, start: '13:00', end: '13:50' },
+    { no: 6, start: '13:50', end: '14:40' },
+    { no: 7, start: '14:40', end: '15:30' },
+  ];
+  // Today's schedule for ป.3/1 (Mon)
+  const TODAY_SCHEDULE = [
+    { period: 1, subject: 'ภาษาไทย',    teacherId: 2, completed: true,  stats: { p: 22, a: 2, l: 1, t: 0 } },
+    { period: 2, subject: 'คณิตศาสตร์', teacherId: 3, completed: false, current: true },
+    { period: 3, subject: 'วิทยาศาสตร์', teacherId: 4, completed: false },
+    { period: 4, subject: 'ภาษาอังกฤษ', teacherId: 5, completed: false },
+    { period: 5, subject: 'สังคมศึกษา',  teacherId: 12, completed: false },
+    { period: 6, subject: 'ศิลปะ',       teacherId: 11, completed: false },
+    { period: 7, subject: 'พลศึกษา',     teacherId: 10, completed: false },
+  ];
+
+  // ─── History (22 วัน — เดือนนี้) ────────────────────
+  const HISTORY_DAYS = (() => {
+    // P=present A=absent L=leave T=late
+    const seq = 'PPPPPLAAPPAPPPPALPPPPP'.split('');
+    return seq.map((s, i) => ({
+      date: 5 + i,
+      status: { P: 'present', A: 'absent', L: 'leave', T: 'late' }[s],
+    }));
+  })();
+
+  // ─── Notifications log ──────────────────────────────
+  const NOTIFICATIONS = [
+    { id: 1, type: 'absence', title: 'แจ้งขาดเรียน · 6 ผู้ปกครอง', body: 'ครูพรทิพย์ส่งแจ้งเตือนคาบ 1 ป.3/1 — สำเร็จทั้งหมด', time: '08:36 น.', ok: true },
+    { id: 2, type: 'reply',   title: 'แม่ของ ภูมินทร์ ตอบกลับ', body: 'AI ตีความเป็น "ลา" · เปลี่ยนสถานะอัตโนมัติ', time: '08:42 น.', ok: true },
+    { id: 3, type: 'alert',   title: 'นักเรียนขาดติด 3 วัน · 1 คนใหม่', body: 'ด.ช.วรเมธ ทองอยู่ (ป.2/1) — ขาดติดต่อกัน 3 วัน', time: '00:05 น.', ok: true, severity: 'warn' },
+    { id: 4, type: 'absence', title: 'แจ้งขาดเรียน · 3 ผู้ปกครอง', body: 'ครูสุดาส่งแจ้งเตือนคาบ 1 ป.3/2 — สำเร็จ', time: 'เมื่อวาน · 08:38', ok: true },
+    { id: 5, type: 'system',  title: 'สรุปสัปดาห์ที่ผ่านมาส่งไปยังผู้ปกครอง 168 คน', body: 'อัตราการเปิดอ่าน 87% · 6 คนยังไม่ได้อ่าน', time: 'ศุกร์ · 16:30', ok: true },
+    { id: 6, type: 'reply',   title: 'พ่อของ ณัฐภัทร ตอบกลับ', body: 'AI ตีความเป็น "สาย" — น้องลืมเช็คอิน', time: '08:55 น.', ok: true },
+    { id: 7, type: 'quota',   title: '⚠ โควต้า LINE เหลือ 3,158 ข้อความ', body: 'คาดว่าจะหมดในประมาณ 18 วันหากใช้อัตราเดิม', time: 'เมื่อ 2 ชม.', ok: true, severity: 'info' },
+    { id: 8, type: 'alert',   title: 'นักเรียนขาดติด 3 วัน · 1 คนใหม่', body: 'ด.ญ.ศรัณย์พร แสงดี (ป.5/2) — ขาดติดต่อกัน 3 วัน', time: 'เมื่อวาน', ok: true, severity: 'warn' },
+    { id: 9, type: 'absence', title: 'แจ้งขาดเรียน · 4 ผู้ปกครอง', body: 'ครูประวิทย์ส่งแจ้งเตือนคาบ 2 ป.4/1', time: '2 วันที่แล้ว', ok: true },
+    { id:10, type: 'system',  title: 'ระบบสำรองข้อมูลอัตโนมัติ', body: '187 นักเรียน · 1,420 attendance records · 2.3 MB', time: 'เมื่อคืน · 00:00', ok: true },
+  ];
+
+  // ─── Reports list ───────────────────────────────────
+  const REPORTS = [
+    { id: 1, name: 'รายงานการมาเรียนรายเดือน', desc: 'ฟอร์ม สพฐ. ส.ป.อ./บ.20', period: 'พฤษภาคม 2569', updated: 'เมื่อ 2 ชั่วโมง', size: '180 KB', format: 'Excel + PDF', icon: 'doc' },
+    { id: 2, name: 'รายงานการมาเรียนรายเทอม', desc: 'สรุปทั้งภาคเรียน · แยกรายห้อง', period: 'เทอม 2/2568', updated: 'รออัปเดต (สิ้นเทอม)', size: '—', format: 'Excel', icon: 'doc' },
+    { id: 3, name: 'รายงานเด็กขาดบ่อย', desc: 'รายชื่อนักเรียนที่ขาด ≥ 5 วันในเดือน', period: 'พฤษภาคม 2569', updated: 'เมื่อคืน', size: '24 KB', format: 'PDF', icon: 'alert' },
+    { id: 4, name: 'สถิติการมาเรียนรายห้อง', desc: 'เปรียบเทียบ 8 ห้อง · แนวโน้ม 3 เดือน', period: 'มี.ค. – พ.ค. 2569', updated: 'เมื่อ 1 ชั่วโมง', size: '420 KB', format: 'Excel + Chart', icon: 'chart' },
+    { id: 5, name: 'ข้อมูลส่งออก สพฐ.', desc: 'ไฟล์มาตรฐาน ส่งเข้าระบบ DMC ของ สพฐ.', period: '2/2568', updated: 'พร้อมส่ง', size: '5.2 MB', format: 'XML', icon: 'export', primary: true },
+    { id: 6, name: 'รายงานการส่ง LINE', desc: 'จำนวน · อัตราเปิดอ่าน · โควต้าที่ใช้', period: 'เดือนนี้', updated: '15 นาทีที่แล้ว', size: '32 KB', format: 'PDF', icon: 'msg' },
+  ];
+
+  // ─── Helpers ────────────────────────────────────────
+  const getTeacher = (id) => TEACHERS.find(t => t.id === id);
+  const getStudent = (id) => ALL_STUDENTS.find(s => s.id === id);
+  const getClass = (id) => CLASSROOMS.find(c => c.id === id);
+  const getParent = (id) => PARENTS.find(p => p.id === id);
+
+  return {
+    SCHOOL, TEACHERS, SUBJECTS, CLASSROOMS, PERIODS,
+    STUDENTS_P3_1, ALL_STUDENTS,
+    PARENTS, CHATS,
+    TODAY_SCHEDULE, HISTORY_DAYS, NOTIFICATIONS, REPORTS,
+    getTeacher, getStudent, getClass, getParent,
+  };
+})();
+
+</script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel">
+// common.jsx — shared utils, icons, layout primitives
+// Exposed on `window` so other babel scripts can use them.
+
+const { useState, useEffect, useMemo, useRef } = React;
+
+// ─── Media-query hook ─────
+function useMediaQuery(q) {
+  const get = () => typeof window !== 'undefined' && window.matchMedia(q).matches;
+  const [m, setM] = useState(get);
+  useEffect(() => {
+    const mql = window.matchMedia(q);
+    const onChange = () => setM(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, [q]);
+  return m;
+}
+
+// ─── Theme hook (persisted) ─────
+function useTheme() {
+  const [theme, setT] = useState(() => {
+    try { return localStorage.getItem('v2_theme') || 'light'; } catch (e) { return 'light'; }
+  });
+  useEffect(() => {
+    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('v2_theme', theme); } catch (e) {}
+  }, [theme]);
+  return [theme, setT];
+}
+
+// ─── Hash-based route ─────
+function useHashRoute(initial = 'home') {
+  const parse = () => {
+    const h = (location.hash || '').replace('#/', '').replace('#', '');
+    const [path, query] = h.split('?');
+    return { path: path || initial, params: new URLSearchParams(query || '') };
+  };
+  const [route, setRouteRaw] = useState(parse);
+
+  useEffect(() => {
+    const onH = () => setRouteRaw(parse());
+    window.addEventListener('hashchange', onH);
+    return () => window.removeEventListener('hashchange', onH);
+  }, []);
+
+  const navigate = (path, params) => {
+    let h = '#/' + path;
+    if (params) {
+      const sp = new URLSearchParams(params);
+      const s = sp.toString();
+      if (s) h += '?' + s;
+    }
+    location.hash = h;
+  };
+
+  return [route, navigate];
+}
+
+// ─── Icons ─────
+const ICONS = {
+  home:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4v-7H9v7H5a2 2 0 01-2-2z"/></svg>,
+  chart:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
+  check:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
+  user:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  users:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+  cls:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  msg:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.5 8.5 8.5 0 01-3.7-.8L3 21l1.9-5.7A8.5 8.5 0 0112.5 3 8.4 8.4 0 0121 11.5z"/></svg>,
+  bell:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 004 0"/></svg>,
+  doc:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>,
+  set:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>,
+  sun:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+  moon:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
+  search:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>,
+  alert:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.3 3.86l-8.18 14a2 2 0 001.71 3h16.34a2 2 0 001.71-3l-8.18-14a2 2 0 00-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  send:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  sparkle: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z"/></svg>,
+  chevR:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18"/></svg>,
+  chevL:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 6 9 12 15 18"/></svg>,
+  plus:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  x:       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  refresh: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>,
+  phone:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z"/></svg>,
+  download:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  filter:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  menu:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  more:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>,
+};
+
+// ─── Avatar ─────
+function Avatar({ name, color, size = 36 }) {
+  const initials = name?.replace(/^(ด\.ช\.|ด\.ญ\.|นาย|นาง|นางสาว|ครู)/, '').trim().slice(0, 1) || '?';
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: color || 'var(--primary)',
+      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600,
+      fontSize: size * 0.4, flexShrink: 0 }}>{initials}</div>
+  );
+}
+
+// ─── Nav model (shared between sidebar + bottom-tab) ─────
+const NAV_ITEMS = [
+  { key: 'home',         label: 'หน้าหลัก',     icon: 'home',   sec: 'ภาพรวม' },
+  { key: 'dashboard',    label: 'แดชบอร์ด ผอ.',  icon: 'chart',  sec: 'ภาพรวม' },
+  { key: 'attendance',   label: 'เช็คชื่อ',      icon: 'check',  sec: 'การสอน', mobileFullscreen: true },
+  { key: 'students',     label: 'นักเรียน',     icon: 'user',   sec: 'การสอน' },
+  { key: 'classrooms',   label: 'ห้องเรียน',     icon: 'cls',    sec: 'การจัดการ' },
+  { key: 'parents',      label: 'ผู้ปกครอง · LINE', icon: 'msg', sec: 'การจัดการ', badgeKey: 'parentsUnread' },
+  { key: 'reports',      label: 'รายงาน · สพฐ.', icon: 'doc',    sec: 'ระบบ' },
+  { key: 'notifications',label: 'แจ้งเตือน',    icon: 'bell',   sec: 'ระบบ' },
+  { key: 'settings',     label: 'ตั้งค่าระบบ',  icon: 'set',    sec: 'ระบบ' },
+];
+
+// ─── Sidebar (desktop) ─────
+function Sidebar({ route, navigate, theme, setTheme, user, onLogout }) {
+  const unread = window.D.PARENTS.reduce((s, p) => s + (p.unread || 0), 0);
+  const sections = {};
+  NAV_ITEMS.forEach(n => { (sections[n.sec] ??= []).push(n); });
+
+  return (
+    <aside className="sb">
+      <div className="sb-brand">
+        <div className="sb-logo">รร</div>
+        <div>
+          <div className="sb-brand-nm">{window.D.SCHOOL.short}</div>
+          <div className="sb-brand-sub">จ.{window.D.SCHOOL.province} · {window.D.SCHOOL.semesterShort}</div>
+        </div>
+      </div>
+      <div className="sb-scroll scroll-y">
+        {Object.entries(sections).map(([sec, items]) => (
+          <React.Fragment key={sec}>
+            <div className="sb-section">{sec}</div>
+            {items.map(n => (
+              <button key={n.key} className={`sb-link ${route.path === n.key ? 'active' : ''}`} onClick={() => navigate(n.key)}>
+                <span className="sb-link-icon">{ICONS[n.icon]}</span>
+                <span>{n.label}</span>
+                {n.badgeKey === 'parentsUnread' && unread > 0 && <span className="sb-badge tnum">{unread}</span>}
+              </button>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="sb-foot">
+        <button className="sb-theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          <span className="sb-link-icon">{theme === 'dark' ? ICONS.sun : ICONS.moon}</span>
+          <span>{theme === 'dark' ? 'โหมดสว่าง' : 'โหมดมืด'}</span>
+        </button>
+        <div className="sb-user-card">
+          <Avatar name={user?.name || ''} color={user?.color} size={36}/>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="sb-user-nm">{user?.name || '—'}</div>
+            <div className="sb-user-role">{user?.roleLabel || ''}</div>
+          </div>
+          <button className="sb-logout-btn" onClick={onLogout} title="ออกจากระบบ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ─── Mobile bottom-nav (5 most important) ─────
+function MobileBottomNav({ route, navigate }) {
+  const items = [
+    { key: 'home',         label: 'หลัก',    icon: 'home' },
+    { key: 'attendance',   label: 'เช็คชื่อ', icon: 'check' },
+    { key: 'students',     label: 'นักเรียน', icon: 'user' },
+    { key: 'parents',      label: 'แชต',     icon: 'msg', badgeKey: 'parentsUnread' },
+    { key: 'more',         label: 'เพิ่ม',   icon: 'menu' },
+  ];
+  const unread = window.D.PARENTS.reduce((s, p) => s + (p.unread || 0), 0);
+  return (
+    <nav className="mob-tab">
+      {items.map(it => (
+        <button key={it.key} className={`mob-tab-btn ${route.path === it.key ? 'active' : ''}`} onClick={() => navigate(it.key)}>
+          <span style={{ position: 'relative', width: 22, height: 22, display: 'inline-flex' }}>
+            {ICONS[it.icon]}
+            {it.badgeKey === 'parentsUnread' && unread > 0 && (
+              <span className="mob-tab-badge tnum">{unread}</span>
+            )}
+          </span>
+          {it.label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+// ─── Mobile top bar (for non-fullscreen pages) ─────
+function MobileTopBar({ title, onOpenMore }) {
+  return (
+    <div className="mob-topbar">
+      <div className="mob-topbar-title">{title}</div>
+      <button className="mob-topbar-btn" onClick={onOpenMore}>{ICONS.menu}</button>
+    </div>
+  );
+}
+
+// ─── Mobile "More" sheet (rest of menu) ─────
+function MoreSheet({ open, onClose, navigate, route, theme, setTheme, user, onLogout }) {
+  if (!open) return null;
+  const allItems = NAV_ITEMS;
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle"/>
+        <div className="sheet-title">เมนูทั้งหมด</div>
+        <div style={{ padding: '0 16px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {allItems.map(n => (
+            <button key={n.key}
+              className={`sheet-link ${route.path === n.key ? 'active' : ''}`}
+              onClick={() => { navigate(n.key); onClose(); }}>
+              <span className="sb-link-icon">{ICONS[n.icon]}</span>
+              <span style={{ flex: 1, textAlign: 'left' }}>{n.label}</span>
+              {ICONS.chevR}
+            </button>
+          ))}
+          <button className="sheet-link" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+            <span className="sb-link-icon">{theme === 'dark' ? ICONS.sun : ICONS.moon}</span>
+            <span style={{ flex: 1, textAlign: 'left' }}>{theme === 'dark' ? 'โหมดสว่าง' : 'โหมดมืด'}</span>
+          </button>
+          {user && (
+            <div style={{ marginTop: 12, padding: '12px 12px 4px', borderTop: '1px solid var(--divider)' }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '4px 4px 12px' }}>
+                <Avatar name={user.name} color={user.color} size={36}/>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{user.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user.roleLabel}</div>
+                </div>
+              </div>
+              <button className="sheet-link" style={{ color: 'var(--absent)' }} onClick={() => { onClose(); onLogout(); }}>
+                <span className="sb-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+                <span style={{ flex: 1, textAlign: 'left' }}>ออกจากระบบ</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page header (desktop) ─────
+function PageHeader({ title, subtitle, actions }) {
+  return (
+    <header className="page-header">
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h1 className="page-title">{title}</h1>
+        {subtitle && <div className="page-sub">{subtitle}</div>}
+      </div>
+      {actions && <div className="page-actions">{actions}</div>}
+    </header>
+  );
+}
+
+// ─── Expose to other babel scripts ─────
+Object.assign(window, {
+  useMediaQuery, useTheme, useHashRoute,
+  ICONS, Avatar, NAV_ITEMS,
+  Sidebar, MobileBottomNav, MobileTopBar, MoreSheet, PageHeader,
+});
+
+</script>
+  <script type="text/babel">
+// login.jsx — Login page + session management
+const { useState: useState_L, useEffect: useEffect_L } = React;
+
+// Mock users — typically only ผอ. or ครู would log in
+const MOCK_USERS = [
+  { id: 'admin-1', role: 'admin',   username: 'somying',  password: '1234', name: 'นางสมหญิง ใจดี',   roleLabel: 'ผู้อำนวยการ',         initials: 'สญ', color: '#B58A2B' },
+  { id: 'teacher-1', role: 'teacher', username: 'porntip',  password: '1234', name: 'ครูพรทิพย์ สวัสดี', roleLabel: 'ครูประจำชั้น ป.3/1', initials: 'พท', color: '#1E47A3' },
+  { id: 'teacher-2', role: 'teacher', username: 'suda',     password: '1234', name: 'ครูสุดา แสงดี',     roleLabel: 'ครูประจำชั้น ป.3/2', initials: 'สด', color: '#B91C1C' },
+  { id: 'teacher-3', role: 'teacher', username: 'pravit',   password: '1234', name: 'ครูประวิทย์ มากมี',  roleLabel: 'ครูประจำชั้น ป.4/1', initials: 'ปว', color: '#15803D' },
+];
+
+// ─── Session helpers (window-scoped) ───
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('v2_session') || 'null'); } catch (e) { return null; }
+}
+function setSession(s) {
+  try { if (s) localStorage.setItem('v2_session', JSON.stringify(s)); else localStorage.removeItem('v2_session'); } catch (e) {}
+}
+
+// ─── useSession hook ───
+function useSession() {
+  const [session, setSessionState] = useState_L(() => getSession());
+  const login = (user) => { setSession(user); setSessionState(user); };
+  const logout = () => { setSession(null); setSessionState(null); try { location.hash = ''; } catch(e){} };
+  return [session, login, logout];
+}
+
+// ─── Login page ───
+function LoginPage({ onLogin }) {
+  const [role, setRole] = useState_L('admin'); // 'admin' | 'teacher'
+  const [username, setUsername] = useState_L('somying');
+  const [password, setPassword] = useState_L('1234');
+  const [error, setError] = useState_L(null);
+  const [loading, setLoading] = useState_L(false);
+  const [showQuick, setShowQuick] = useState_L(true);
+
+  const submit = (e) => {
+    if (e) e.preventDefault();
+    setError(null);
+    setLoading(true);
+    setTimeout(() => {
+      const match = MOCK_USERS.find(u => u.username === username && u.password === password && u.role === role);
+      if (match) onLogin(match);
+      else setError('username หรือ password ไม่ถูกต้อง · ลอง "somying" / "1234" หรือ "porntip" / "1234"');
+      setLoading(false);
+    }, 500);
+  };
+
+  const quickLogin = (u) => {
+    setRole(u.role); setUsername(u.username); setPassword(u.password);
+    setTimeout(() => onLogin(u), 200);
+  };
+
+  const adminUsers = MOCK_USERS.filter(u => u.role === 'admin');
+  const teacherUsers = MOCK_USERS.filter(u => u.role === 'teacher');
+
+  // Switch defaults when role changes
+  useEffect_L(() => {
+    const first = role === 'admin' ? adminUsers[0] : teacherUsers[0];
+    setUsername(first.username); setPassword(first.password);
+  }, [role]);
+
+  return (
+    <div className="login-page">
+      <div className="login-hero desktop-only">
+        <div className="login-hero-inner">
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 28 }}>
+            <div className="login-logo">รร</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.9 }}>{window.D.SCHOOL.short}</div>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>{window.D.SCHOOL.semester}</div>
+            </div>
+          </div>
+          <h1 className="login-h1">ระบบเช็คชื่อ<br/>นักเรียนออนไลน์</h1>
+          <p className="login-p">
+            ลดงานครูจากการเช็คชื่อบนกระดาษ และส่งใบลาด้วยมือ —
+            ระบบส่ง LINE แจ้งผู้ปกครองให้อัตโนมัติ AI ตีความคำตอบเป็นใบลาให้
+          </p>
+          <ul className="login-feat-list">
+            <li><span className="dot"/>เช็คชื่อบนมือถือ · เริ่มต้น "มา" ทุกคน</li>
+            <li><span className="dot"/>ส่ง LINE หาผู้ปกครองอัตโนมัติ</li>
+            <li><span className="dot"/>AI ตีความคำตอบ เปลี่ยนเป็นใบลาให้</li>
+            <li><span className="dot"/>ส่งออก สพฐ. ในรูปแบบมาตรฐาน</li>
+          </ul>
+          <div className="login-foot-meta">
+            <span>📞 0-4422-xxx-xxx</span>
+            <span>·</span>
+            <span>nongbua.school@go.th</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="login-form-col">
+        <div className="login-form-wrap">
+          <div className="login-form-head">
+            <div className="login-logo small">รร</div>
+            <div>
+              <h2 className="login-form-h">เข้าสู่ระบบ</h2>
+              <div className="login-form-sub">{window.D.SCHOOL.name} · {window.D.SCHOOL.semester}</div>
+            </div>
+          </div>
+
+          {showQuick && (
+            <div className="login-quick">
+              <div className="login-quick-l">เข้าใช้แบบเร็ว (สำหรับสาธิต)</div>
+              <div className="login-quick-grid">
+                {MOCK_USERS.map(u => (
+                  <button key={u.id} className="login-quick-card" onClick={() => quickLogin(u)}>
+                    <div className="login-quick-av" style={{ background: u.color }}>{u.initials}</div>
+                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{u.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{u.roleLabel}</div>
+                    </div>
+                    {window.ICONS.chevR}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0', fontSize: 11, color: 'var(--text-subtle)' }}>
+                <span style={{ flex: 1, height: 1, background: 'var(--divider)' }}/>
+                <span>หรือกรอกข้อมูลเอง</span>
+                <span style={{ flex: 1, height: 1, background: 'var(--divider)' }}/>
+              </div>
+            </div>
+          )}
+
+          <form className="login-form" onSubmit={submit}>
+            <div className="field">
+              <label>บทบาท</label>
+              <div className="login-role-tabs">
+                <button type="button" className={role === 'admin' ? 'active' : ''} onClick={() => setRole('admin')}>👔 ผู้บริหาร</button>
+                <button type="button" className={role === 'teacher' ? 'active' : ''} onClick={() => setRole('teacher')}>👨‍🏫 ครู</button>
+              </div>
+            </div>
+            <div className="field">
+              <label>Username</label>
+              <input value={username} onChange={e => setUsername(e.target.value)} placeholder="username" autoComplete="username"/>
+            </div>
+            <div className="field">
+              <label>รหัสผ่าน</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password"/>
+            </div>
+            {error && (<div className="login-error">{error}</div>)}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <input type="checkbox" defaultChecked/> จดจำฉัน
+              </label>
+              <a style={{ color: 'var(--primary)', cursor: 'pointer' }}>ลืมรหัสผ่าน?</a>
+            </div>
+            <button type="submit" className="btn btn-primary btn-lg login-submit" disabled={loading}>
+              {loading ? <span className="login-spinner"/> : 'เข้าสู่ระบบ'}
+            </button>
+          </form>
+
+          <div className="login-meta-foot">
+            ระบบสำหรับ <strong>ผู้บริหาร</strong> และ <strong>ครู</strong> ของ {window.D.SCHOOL.short} เท่านั้น<br/>
+            <span style={{ color: 'var(--text-subtle)' }}>v2.0 · เซิร์ฟเวอร์: attend.school.go.th</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { LoginPage, useSession, MOCK_USERS });
+
+</script>
+  <script type="text/babel">
+// pages-main.jsx — Home, Dashboard, Attendance, Students
+// (Uses window.ICONS, window.D, etc. from common.jsx + data.js)
+
+const { useState: useState_M, useMemo: useMemo_M, useEffect: useEffect_M, useRef: useRef_M } = React;
+
+// ═════════════════════════════════════════════════════════
+//  HOME PAGE
+// ═════════════════════════════════════════════════════════
+function HomePage({ navigate, isMobile, user }) {
+  const S = window.D.SCHOOL;
+  const greetName = user?.name?.replace(/^(นาง|นางสาว|นาย|ครู)/, '') || '';
+  return (
+    <div className="page-body home">
+      <PageHeader
+        title={isMobile ? null : 'หน้าหลัก'}
+        subtitle={isMobile ? null : S.todayLabel}
+      />
+      <div className="home-wrap">
+        <div className="home-welcome">
+          <div className="welcome-av" style={{ background: user?.color ? `linear-gradient(135deg, ${user.color}, ${user.color})` : undefined }}>{user?.initials || 'รร'}</div>
+          <div>
+            <div className="welcome-h1">สวัสดีค่ะ {greetName ? `คุณ${greetName}` : ''}</div>
+            <div className="welcome-sub">{user?.roleLabel} · {S.todayLabel}</div>
+          </div>
+        </div>
+
+        <div className="home-kpis">
+          <div className="kpi"><div className="lab">นักเรียนทั้งหมด</div><div className="val tnum">{S.studentTotal}</div><div className="sub">8 ห้อง · ป.1 – ป.6</div></div>
+          <div className="kpi"><div className="lab">มาเรียนวันนี้</div><div className="val tnum" style={{ color: 'var(--present)' }}>176<span style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 500 }}>/187</span></div><div className="sub">94.1%</div></div>
+          <div className="kpi"><div className="lab">ต้องติดตาม</div><div className="val tnum" style={{ color: 'var(--absent)' }}>3</div><div className="sub">ขาดติดต่อกัน ≥ 3 วัน</div></div>
+          <div className="kpi"><div className="lab">โควต้า LINE</div><div className="val tnum">{S.lineQuotaTotal - S.lineQuotaUsed}</div><div className="sub">/{S.lineQuotaTotal} เดือนนี้</div></div>
+        </div>
+
+        <div className="home-grid">
+          <div className="panel">
+            <div className="panel-head"><h2>เริ่มงานวันนี้</h2></div>
+            <div style={{ padding: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+              <button className="quick-card" onClick={() => navigate('attendance')}>
+                <div className="qc-icon present">{window.ICONS.check}</div>
+                <div className="qc-body">
+                  <div className="qc-nm">เช็คชื่อรายวัน</div>
+                  <div className="qc-desc">คาบที่ 2 · คณิตศาสตร์ · กำลังเรียน</div>
+                </div>
+              </button>
+              <button className="quick-card" onClick={() => navigate('dashboard')}>
+                <div className="qc-icon">{window.ICONS.chart}</div>
+                <div className="qc-body">
+                  <div className="qc-nm">ดูแดชบอร์ดเต็ม</div>
+                  <div className="qc-desc">แนวโน้ม · ห้องเรียน · alerts</div>
+                </div>
+              </button>
+              <button className="quick-card" onClick={() => navigate('parents')}>
+                <div className="qc-icon line">{window.ICONS.msg}</div>
+                <div className="qc-body">
+                  <div className="qc-nm">แชตผู้ปกครอง <span className="dot-red"></span></div>
+                  <div className="qc-desc">มี 3 ข้อความใหม่</div>
+                </div>
+              </button>
+              <button className="quick-card" onClick={() => navigate('reports')}>
+                <div className="qc-icon">{window.ICONS.doc}</div>
+                <div className="qc-body">
+                  <div className="qc-nm">ส่งออกข้อมูล สพฐ.</div>
+                  <div className="qc-desc">DMC พร้อมส่ง</div>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div className="panel">
+            <div className="panel-head"><h2>กิจกรรมล่าสุด</h2></div>
+            <div className="feed-mini">
+              {window.D.NOTIFICATIONS.slice(0, 6).map(n => (
+                <div className="feed-mini-row" key={n.id}>
+                  <div className={`feed-mini-dot ${n.severity || 'ok'}`}>{window.ICONS[n.type === 'reply' ? 'msg' : n.type === 'alert' ? 'alert' : n.type === 'absence' ? 'check' : 'set']}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="feed-mini-h">{n.title}</div>
+                    <div className="feed-mini-b">{n.body}</div>
+                  </div>
+                  <div className="feed-mini-t tnum">{n.time}</div>
+                </div>
+              ))}
+            </div>
+            <button className="see-more-btn" onClick={() => navigate('notifications')}>ดูทั้งหมด →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  DASHBOARD (Admin)
+// ═════════════════════════════════════════════════════════
+function DashboardPage({ navigate, isMobile }) {
+  const [contactModal, setContactModal] = useState_M(null);
+
+  const alertStudents = window.D.ALL_STUDENTS.filter(s => s.alert);
+  const S = window.D.SCHOOL;
+
+  return (
+    <div className="page-body">
+      <PageHeader
+        title="แดชบอร์ด ผอ."
+        subtitle={S.todayLabel}
+        actions={!isMobile && (<>
+          <span className="chip primary">เช็คครบ 7/8 ห้อง</span>
+          <button className="btn btn-outline btn-sm">{window.ICONS.download} ส่งออก</button>
+        </>)}
+      />
+      <div className="dashboard-wrap">
+        <div className="dashboard-kpis">
+          <div className="kpi"><div className="lab">นักเรียนทั้งหมด</div><div className="val tnum">{S.studentTotal}</div><div className="sub">8 ห้อง</div></div>
+          <div className="kpi"><div className="lab">มาเรียนวันนี้</div><div className="val tnum" style={{ color: 'var(--present)' }}>176<span style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 500 }}>/187</span></div><div className="sub">94.1% · +1.2%</div></div>
+          <div className="kpi kpi-alert"><div className="lab">ต้องติดตาม</div><div className="val tnum">3</div><div className="sub">ขาด ≥ 3 วัน</div></div>
+          <div className="kpi"><div className="lab">โควต้า LINE</div><div className="val tnum">{S.lineQuotaTotal - S.lineQuotaUsed}</div><div className="sub">ใช้ {S.lineQuotaUsed}/{S.lineQuotaTotal}</div>
+            <div className="quota-bar"><div style={{ width: `${(S.lineQuotaUsed/S.lineQuotaTotal)*100}%` }}/></div></div>
+        </div>
+
+        <div className="dashboard-grid">
+          <div className="panel">
+            <div className="panel-head"><h2>แนวโน้มการมาเรียน</h2><span className="sub">7 วันที่ผ่านมา</span>
+              <div className="right"><span className="chip primary">7 วัน</span><span className="chip">30 วัน</span></div>
+            </div>
+            <TrendChart/>
+          </div>
+          <div className="panel">
+            <div className="panel-head"><h2 style={{ color: 'var(--absent-strong)' }}>นักเรียนต้องติดตาม</h2>
+              <div className="right"><span className="chip" style={{ background: 'var(--absent-soft)', color: 'var(--absent-strong)' }}>{alertStudents.length} คน</span></div>
+            </div>
+            <div className="panel-body flush">
+              {alertStudents.map(s => {
+                const cls = window.D.getClass(s.classroomId);
+                return (
+                  <div className="alert-item" key={s.id}>
+                    <div className="avatar-sm" style={{ width: 32, height: 32, fontSize: 12, background: 'var(--absent-soft)', color: 'var(--absent-strong)' }}>{s.fname[0]}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{s.prefix}{s.fname} {s.lname}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                        {cls?.name} · <span style={{ color: 'var(--absent)', fontWeight: 600 }}>ขาด {s.absentStreak} วันติด</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setContactModal(s)}>{window.ICONS.sparkle} ติดต่อ</button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="panel" style={{ marginTop: 16 }}>
+          <div className="panel-head"><h2>การเช็คชื่อรายห้อง · คาบ 1</h2>
+            <div className="right"><span className="chip primary">เช็คครบทุกห้อง</span></div>
+          </div>
+          <div className="room-grid">
+            {window.D.CLASSROOMS.map(c => {
+              const pct = c.present/c.count, miss = c.count - c.present;
+              return (
+                <div key={c.id} className={`room ${miss === 0 ? '' : miss > 2 ? 'bad' : 'partial'}`} onClick={() => navigate('classrooms', { id: c.id })}>
+                  <div className="room-nm">{c.name}</div>
+                  <div className="room-t">{window.D.getTeacher(c.teacherId)?.fname}</div>
+                  <div className="room-r">
+                    <span className="a tnum">{c.present}</span>
+                    <span className="b">/{c.count}</span>
+                    {miss === 0 ? <span className="ok">✓</span> : <span className="bad-n">−{miss}</span>}
+                  </div>
+                  <div className="pct-bar"><div style={{ width: `${pct*100}%` }}/></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {contactModal && <ContactAIModal student={contactModal} onClose={() => setContactModal(null)}/>}
+    </div>
+  );
+}
+
+function TrendChart() {
+  const days = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'จ.', 'อ.'];
+  const present = [178, 182, 175, 180, 183, 181, 184];
+  const absent  = [9, 5, 12, 7, 4, 6, 3];
+  const W = 700, H = 200, pad = { l: 36, r: 16, t: 12, b: 28 };
+  const innerW = W - pad.l - pad.r, innerH = H - pad.t - pad.b;
+  const x = (i) => pad.l + (i * innerW) / (days.length - 1);
+  const yP = (v) => pad.t + innerH * (1 - (v / 187));
+  const yA = (v) => pad.t + innerH * (1 - (v / 25));
+  const linePath = (arr, scale) => arr.map((v, i) => `${i?'L':'M'}${x(i)} ${scale(v)}`).join(' ');
+  const areaPath = `${linePath(present, yP)} L${x(days.length-1)} ${pad.t+innerH} L${x(0)} ${pad.t+innerH} Z`;
+
+  return (
+    <div style={{ padding: '14px 18px 18px' }}>
+      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+        <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--present)', marginRight: 4, verticalAlign: 'middle' }}/>มาเรียน</span>
+        <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--absent)', marginRight: 4, verticalAlign: 'middle' }}/>ขาด/ลา/สาย</span>
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }}>
+        {[0, 0.5, 1].map(t => (<line key={t} x1={pad.l} x2={W-pad.r} y1={pad.t + innerH*(1-t)} y2={pad.t + innerH*(1-t)} stroke="var(--border)" strokeDasharray="2 4"/>))}
+        <path d={areaPath} fill="var(--present-soft)" opacity="0.6"/>
+        <path d={linePath(present, yP)} fill="none" stroke="var(--present)" strokeWidth="2.5" strokeLinejoin="round"/>
+        {present.map((v, i) => <circle key={i} cx={x(i)} cy={yP(v)} r="3.5" fill="var(--surface)" stroke="var(--present)" strokeWidth="2"/>)}
+        <path d={linePath(absent, yA)} fill="none" stroke="var(--absent)" strokeWidth="2" strokeDasharray="4 4"/>
+        {absent.map((v, i) => <circle key={i} cx={x(i)} cy={yA(v)} r="3" fill="var(--absent)"/>)}
+        {days.map((d, i) => <text key={i} x={x(i)} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--text-subtle)">{d}</text>)}
+        {[187, 93, 0].map((v, i) => <text key={i} x={pad.l - 8} y={pad.t + innerH*(i/2) + 4} textAnchor="end" fontSize="10" fill="var(--text-subtle)">{v}</text>)}
+      </svg>
+    </div>
+  );
+}
+
+function ContactAIModal({ student, onClose }) {
+  const cls = window.D.getClass(student.classroomId);
+  const initialDraft = `สวัสดีค่ะ ผู้ปกครอง ${student.prefix}${student.fname} ${student.lname}\n\nครูสังเกตว่าน้องไม่ได้มาโรงเรียนติดต่อกัน ${student.absentStreak} วันแล้ว ครูเป็นห่วงน้องค่ะ อยากทราบว่าน้องเป็นอย่างไรบ้าง มีอะไรที่ครูช่วยได้บ้างคะ ตอบกลับมาที่ช่องนี้ได้เลยนะคะ\n\nขอบคุณค่ะ`;
+  const [draft, setDraft] = useState_M(initialDraft);
+  const [regen, setRegen] = useState_M(false);
+  const [sent, setSent] = useState_M(false);
+
+  const regenerate = () => {
+    setRegen(true);
+    setTimeout(() => {
+      setDraft(`เรียน ผู้ปกครอง ${student.prefix}${student.fname}\n\nครู${cls?.name} ขอแจ้งว่าน้องขาดเรียนเป็นวันที่ ${student.absentStreak} แล้ว หากน้องมีเหตุผลใดที่ทำให้ไม่ได้มา หรือต้องการความช่วยเหลือจากโรงเรียน สามารถแจ้งครูที่ช่องนี้หรือโทร 044-xxx-xxx ได้เลยค่ะ\n\nครูเป็นห่วงน้องมากค่ะ`);
+      setRegen(false);
+    }, 800);
+  };
+
+  if (sent) return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal modal-sm fade-in" onClick={e => e.stopPropagation()}>
+        <div style={{ padding: 32, textAlign: 'center' }}>
+          <div style={{ width: 60, height: 60, margin: '0 auto 16px', background: 'var(--present-soft)', color: 'var(--present-strong)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{window.ICONS.check}</div>
+          <h3 style={{ margin: 0, fontSize: 17 }}>ส่งข้อความเรียบร้อย</h3>
+          <p style={{ color: 'var(--text-muted)', marginTop: 6, fontSize: 13 }}>เริ่มแชต 1-1 ระหว่างครูกับผู้ปกครอง</p>
+          <button className="btn btn-primary" style={{ marginTop: 16, width: '100%' }} onClick={onClose}>ปิด</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-head-icon">{window.ICONS.msg}</div>
+          <div style={{ flex: 1 }}>
+            <h3>ติดต่อผู้ปกครอง</h3>
+            <div className="sub">{student.prefix}{student.fname} {student.lname} · {cls?.name} · ขาด {student.absentStreak} วันติด</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>{window.ICONS.x}</button>
+        </div>
+        <div className="modal-body">
+          <div className="ai-card">
+            <div className="ai-card-l">{window.ICONS.sparkle} ข้อความจาก AI</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>AI ร่างข้อความให้ตามบริบทของน้อง · ครูแก้ไขก่อนส่งได้</div>
+          </div>
+          <div className="ta-wrap">
+            <textarea value={draft} onChange={e => setDraft(e.target.value)} disabled={regen}/>
+            <div className="ta-tools">
+              <button className="btn btn-sm btn-ghost" onClick={regenerate} disabled={regen}>{window.ICONS.refresh} {regen ? 'กำลังร่างใหม่…' : 'ร่างใหม่'}</button>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }} className="tnum">{draft.length} ตัวอักษร</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', margin: '14px 0 6px' }}>ตัวอย่างใน LINE ผู้ปกครอง</div>
+          <div style={{ background: 'var(--line-bg)', padding: 14, borderRadius: 10, display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="preview-line-bubble">{draft}</div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 'auto' }}>ใช้ 1 ข้อความจากโควต้า</span>
+          <button className="btn btn-outline" onClick={onClose}>ยกเลิก</button>
+          <button className="btn btn-primary" onClick={() => setSent(true)}>{window.ICONS.send} ส่งทาง LINE</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  STUDENTS PAGE (list + detail)
+// ═════════════════════════════════════════════════════════
+function StudentsPage({ navigate, route, isMobile }) {
+  const [filter, setFilter] = useState_M('all');
+  const [q, setQ] = useState_M('');
+  const [classFilter, setClassFilter] = useState_M('all');
+  const selectedId = route.params.get('id');
+
+  const list = useMemo_M(() => {
+    let r = window.D.ALL_STUDENTS;
+    if (classFilter !== 'all') r = r.filter(s => s.classroomId === classFilter);
+    if (filter === 'alert') r = r.filter(s => s.alert);
+    if (filter === 'today') r = r.filter(s => s.alert || s.no <= 5);
+    if (q) r = r.filter(s => (s.fname + s.lname).includes(q) || String(s.no).includes(q));
+    return r;
+  }, [filter, q, classFilter]);
+
+  const selected = selectedId ? window.D.getStudent(selectedId) : list[0];
+
+  // On mobile, when a student selected → show only detail
+  const showDetailOnMobile = isMobile && selectedId;
+  const showListOnMobile = isMobile && !selectedId;
+
+  return (
+    <div className="page-body">
+      {!showDetailOnMobile && <PageHeader title="นักเรียน" subtitle={`${list.length} จาก ${window.D.ALL_STUDENTS.length} คน`}/>}
+      <div className={`students-layout ${isMobile ? 'mobile' : ''}`}>
+        {(!isMobile || showListOnMobile) && (
+          <div className="students-list-pane">
+            <div className="students-filter">
+              <div className="search-box">
+                {window.ICONS.search}
+                <input placeholder="ค้นหาชื่อ / เลขที่" value={q} onChange={e => setQ(e.target.value)}/>
+              </div>
+              <select value={classFilter} onChange={e => setClassFilter(e.target.value)}>
+                <option value="all">ทุกห้อง</option>
+                {window.D.CLASSROOMS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <div className="filter-tabs">
+                <button className={filter==='all'?'active':''} onClick={() => setFilter('all')}>ทั้งหมด</button>
+                <button className={filter==='today'?'active':''} onClick={() => setFilter('today')}>ไม่มาวันนี้</button>
+                <button className={filter==='alert'?'active':''} onClick={() => setFilter('alert')}>ต้องติดตาม</button>
+              </div>
+            </div>
+            <div className="students-list scroll-y">
+              {list.map(s => {
+                const cls = window.D.getClass(s.classroomId);
+                const sColor = window.D.getTeacher(cls?.teacherId)?.color || 'var(--primary)';
+                return (
+                  <div key={s.id} className={`list-row ${selected?.id === s.id ? 'active' : ''}`}
+                    onClick={() => navigate('students', { id: s.id })}>
+                    <div className="avatar-sm" style={{ width: 38, height: 38, fontSize: 14, background: sColor }}>{s.fname[0]}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500 }}>{s.prefix}{s.fname} {s.lname}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                        {cls?.name} · เลขที่ {s.no}
+                        {s.alert && <span style={{ marginLeft: 6, color: 'var(--absent)', fontWeight: 600 }}>· ขาด {s.absentStreak} วันติด</span>}
+                      </div>
+                    </div>
+                    {window.ICONS.chevR}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {(!isMobile || showDetailOnMobile) && selected && (
+          <StudentDetail student={selected} onBack={() => navigate('students')} isMobile={isMobile}/>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StudentDetail({ student: s, onBack, isMobile }) {
+  const cls = window.D.getClass(s.classroomId);
+  const teacher = window.D.getTeacher(cls?.teacherId);
+  const present = window.D.HISTORY_DAYS.filter(d => d.status === 'present').length;
+  const absent  = window.D.HISTORY_DAYS.filter(d => d.status === 'absent').length;
+  const leave   = window.D.HISTORY_DAYS.filter(d => d.status === 'leave').length;
+  const late    = window.D.HISTORY_DAYS.filter(d => d.status === 'late').length;
+  const parent  = window.D.PARENTS.find(p => p.studentId === s.id);
+
+  return (
+    <div className="students-detail-pane">
+      {isMobile && (
+        <button className="back-btn" onClick={onBack}>{window.ICONS.chevL} กลับรายการ</button>
+      )}
+      <div className="sd-head">
+        <div className="sd-avatar" style={{ background: teacher?.color || 'var(--primary)' }}>{s.fname[0]}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2>{s.prefix}{s.fname} {s.lname}</h2>
+          <div className="sd-meta">
+            <span>{cls?.name} · เลขที่ {s.no}</span>·
+            <span className="tnum">รหัส {s.studentCode}</span>·
+            <span>อายุ {s.age} ปี</span>·
+            {s.alert
+              ? <span style={{ color: 'var(--absent)', fontWeight: 600 }}>⚠ ขาด {s.absentStreak} วันติด</span>
+              : <span style={{ color: 'var(--present-strong)', fontWeight: 600 }}>● กำลังศึกษา</span>}
+          </div>
+        </div>
+        {!isMobile && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline btn-sm">{window.ICONS.phone}</button>
+            <button className="btn btn-primary btn-sm">{window.ICONS.msg} ส่ง LINE</button>
+          </div>
+        )}
+      </div>
+
+      <div className="sd-stats">
+        <div className="ministat"><div className="lab">มาเรียนเดือนนี้</div><div className="val tnum" style={{ color: 'var(--present-strong)' }}>{present}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>/22</span></div></div>
+        <div className="ministat"><div className="lab">ขาด</div><div className="val tnum" style={{ color: 'var(--absent)' }}>{absent}</div></div>
+        <div className="ministat"><div className="lab">ลา</div><div className="val tnum" style={{ color: 'var(--leave)' }}>{leave}</div></div>
+        <div className="ministat"><div className="lab">สาย</div><div className="val tnum" style={{ color: 'var(--late)' }}>{late}</div></div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 14 }}>
+        <div className="panel-head"><h2>ประวัติการมาเรียน · พฤษภาคม</h2><span className="sub">22 วันเรียน</span></div>
+        <div className="panel-body">
+          <div className="cal-grid">
+            {window.D.HISTORY_DAYS.map((d, i) => (
+              <div key={i} className="cal-day" data-s={d.status} title={`${d.date} พ.ค. — ${d.status}`}>{d.date}</div>
+            ))}
+          </div>
+          <div className="cal-legend">
+            <span><span className="sw" style={{ background: 'var(--present-soft)' }}/>มา</span>
+            <span><span className="sw" style={{ background: 'var(--absent-soft)' }}/>ขาด</span>
+            <span><span className="sw" style={{ background: 'var(--leave-soft)' }}/>ลา</span>
+            <span><span className="sw" style={{ background: 'var(--late-soft)' }}/>สาย</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 14 }}>
+        <div className="panel-head"><h2>ผู้ปกครอง</h2></div>
+        <div>
+          {parent ? (
+            <div className="parent-card">
+              <div className="avatar-sm" style={{ width: 40, height: 40, fontSize: 14, background: 'var(--accent)' }}>{parent.name.charAt(parent.name.search(/[ก-ฮ]/))}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{parent.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <span>{parent.relation}</span>·
+                  <span className="tnum">{parent.phone}</span>·
+                  {parent.lineLinked
+                    ? <span style={{ background: 'var(--line)', color: '#fff', padding: '1px 8px', borderRadius: 99, fontSize: 10, fontWeight: 600 }}>LINE เชื่อมแล้ว</span>
+                    : <span style={{ background: 'var(--leave-soft)', color: 'var(--leave-strong)', padding: '1px 8px', borderRadius: 99, fontSize: 10, fontWeight: 600 }}>รอเชื่อม LINE</span>}
+                </div>
+              </div>
+              <button className="btn btn-sm btn-outline">{window.ICONS.msg} แชต</button>
+            </div>
+          ) : (
+            <div style={{ padding: 18, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>ยังไม่มีผู้ปกครองในระบบ · <a style={{ color: 'var(--primary)', cursor: 'pointer' }}>+ เพิ่ม</a></div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  ATTENDANCE PAGE — mobile-fullscreen + desktop layout
+// ═════════════════════════════════════════════════════════
+function AttendancePage({ navigate, isMobile }) {
+  // Period selection
+  const [periodIdx, setPeriodIdx] = useState_M(1); // start at current period (idx 1)
+  // Statuses + notes
+  const [statuses, setStatuses] = useState_M(() => {
+    const init = {}; window.D.STUDENTS_P3_1.forEach(s => { init[s.no] = 'present'; }); return init;
+  });
+  const [notes, setNotes] = useState_M({});
+  const [filter, setFilter] = useState_M('all');
+  const [query, setQuery] = useState_M('');
+  const [showSend, setShowSend] = useState_M(false);
+  const [success, setSuccess] = useState_M(null);
+
+  const period = window.D.TODAY_SCHEDULE[periodIdx];
+  const subject = period?.subject;
+
+  const counts = useMemo_M(() => {
+    const c = { present: 0, absent: 0, leave: 0, late: 0 };
+    Object.values(statuses).forEach(s => c[s]++);
+    return c;
+  }, [statuses]);
+  const notPresent = counts.absent + counts.leave + counts.late;
+
+  const filtered = window.D.STUDENTS_P3_1.filter(s => {
+    if (filter !== 'all' && statuses[s.no] !== filter) return false;
+    if (query && !(`${s.fname} ${s.lname} ${s.no}`).includes(query)) return false;
+    return true;
+  });
+
+  const setStatus = (no, st) => setStatuses(p => ({ ...p, [no]: st }));
+  const setNote = (no, n) => setNotes(p => ({ ...p, [no]: n }));
+  const resetAll = () => {
+    const init = {}; window.D.STUDENTS_P3_1.forEach(s => { init[s.no] = 'present'; });
+    setStatuses(init); setNotes({});
+  };
+  const flagged = window.D.STUDENTS_P3_1.filter(s => statuses[s.no] !== 'present');
+
+  return (
+    <div className={`attendance-page ${isMobile ? 'mobile' : ''}`}>
+      {/* Header */}
+      <div className="att-header">
+        {isMobile && (
+          <button className="att-back" onClick={() => navigate('home')}>{window.ICONS.chevL}</button>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="att-title">เช็คชื่อ · ป.3/1</div>
+          <div className="att-sub">{window.D.SCHOOL.todayLabel.split(' ').slice(-3).join(' ')} · 25 คน</div>
+        </div>
+        <select className="att-period-select" value={periodIdx} onChange={e => setPeriodIdx(+e.target.value)}>
+          {window.D.TODAY_SCHEDULE.map((p, i) => (
+            <option key={i} value={i}>
+              คาบ {p.period} · {p.subject} {p.completed ? '✓' : p.current ? '· กำลังเรียน' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Progress bar */}
+      <div className="att-progress">
+        <div className="att-progress-bar">
+          {counts.present > 0 && <div className="seg" style={{ flex: counts.present, background: 'var(--present)' }}/>}
+          {counts.absent > 0 && <div className="seg" style={{ flex: counts.absent, background: 'var(--absent)' }}/>}
+          {counts.leave > 0 && <div className="seg" style={{ flex: counts.leave, background: 'var(--leave)' }}/>}
+          {counts.late > 0 && <div className="seg" style={{ flex: counts.late, background: 'var(--late)' }}/>}
+        </div>
+        <div className="att-counts">
+          <span className="item"><span className="d" style={{ background: 'var(--present)' }}/><span className="n tnum">{counts.present}</span> มา</span>
+          <span className="item"><span className="d" style={{ background: 'var(--absent)' }}/><span className="n tnum">{counts.absent}</span> ขาด</span>
+          <span className="item"><span className="d" style={{ background: 'var(--leave)' }}/><span className="n tnum">{counts.leave}</span> ลา</span>
+          <span className="item"><span className="d" style={{ background: 'var(--late)' }}/><span className="n tnum">{counts.late}</span> สาย</span>
+        </div>
+      </div>
+
+      {/* Filter chips + bulk + search */}
+      <div className="att-filters scroll-x no-scrollbar">
+        <button className={`chip ${filter==='all'?'active':''}`} onClick={() => setFilter('all')}>ทั้งหมด · {window.D.STUDENTS_P3_1.length}</button>
+        <button className={`chip ${filter==='absent'?'active':''}`} onClick={() => setFilter(filter==='absent'?'all':'absent')}>ขาด · {counts.absent}</button>
+        <button className={`chip ${filter==='leave'?'active':''}`} onClick={() => setFilter(filter==='leave'?'all':'leave')}>ลา · {counts.leave}</button>
+        <button className={`chip ${filter==='late'?'active':''}`} onClick={() => setFilter(filter==='late'?'all':'late')}>สาย · {counts.late}</button>
+        <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button className="chip" onClick={resetAll}>{window.ICONS.refresh} รีเซ็ต</button>
+        </span>
+      </div>
+
+      <div className="att-info-bar">
+        เริ่มต้น: ทุกคน "มา" — แตะปุ่มเปลี่ยนเฉพาะคนที่ไม่ได้มา · ส่ง LINE เฉพาะ ≠ "มา"
+      </div>
+
+      <div className="att-search">
+        {window.ICONS.search}
+        <input value={query} onChange={e => setQuery(e.target.value)} placeholder="ค้นหาเลขที่หรือชื่อ…"/>
+      </div>
+
+      {/* Student rows */}
+      <div className="att-list scroll-y">
+        {filtered.length === 0 ? (
+          <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-subtle)' }}>ไม่พบนักเรียนตามเงื่อนไข</div>
+        ) : filtered.map(s => (
+          <StudentAttRow key={s.no} student={s} status={statuses[s.no]} note={notes[s.no] || ''}
+            setStatus={(st) => setStatus(s.no, st)} setNote={(n) => setNote(s.no, n)}/>
+        ))}
+      </div>
+
+      {/* CTA dock */}
+      <div className="att-cta-dock">
+        <button className="att-cta" disabled={notPresent === 0 && !window.D.STUDENTS_P3_1.find(s => statuses[s.no] !== 'present')}
+          onClick={() => setShowSend(true)}>
+          {window.ICONS.send}
+          {notPresent === 0
+            ? 'ทุกคนมาครบ — บันทึก'
+            : <>บันทึก & ส่ง LINE <span className="badge tnum">{notPresent} คน</span></>}
+        </button>
+      </div>
+
+      {showSend && (
+        <SendConfirmSheet flagged={flagged} statuses={statuses} period={period}
+          onClose={() => setShowSend(false)}
+          onConfirm={() => { setShowSend(false); setSuccess({ counts, period, flagged: flagged.length }); }}/>
+      )}
+      {success && <AttSuccessOverlay data={success} onClose={() => { setSuccess(null); navigate('home'); }}/>}
+    </div>
+  );
+}
+
+function StudentAttRow({ student, status, note, setStatus, setNote }) {
+  const showNote = status === 'leave' || status === 'absent';
+  return (
+    <>
+      <div className={`att-row ${student.alert ? 'alert' : ''}`}>
+        <div className="att-no tnum">{String(student.no).padStart(2, '0')}</div>
+        <div className="att-name">
+          <div className="att-name-n">{student.prefix}{student.fname} {student.lname}</div>
+          {student.alert
+            ? <div className="att-name-m warn">⚠ ขาดติดต่อกัน {student.absentStreak} วัน</div>
+            : status !== 'present' && <div className="att-name-m">จะแจ้งผู้ปกครองทาง LINE</div>}
+        </div>
+        <div className="seg-control">
+          {['present', 'absent', 'leave', 'late'].map(s => (
+            <button key={s} className="seg-btn" data-s={s} data-active={status === s} onClick={() => setStatus(s)}>
+              {{ present: 'มา', absent: 'ขาด', leave: 'ลา', late: 'สาย' }[s]}
+            </button>
+          ))}
+        </div>
+      </div>
+      {showNote && (
+        <div className="att-note-row fade-in">
+          <input placeholder={status === 'leave' ? 'เหตุผลที่ลา (เช่น ป่วย, ลากิจ)' : 'หมายเหตุ (ไม่บังคับ)'}
+            value={note} onChange={e => setNote(e.target.value)}/>
+        </div>
+      )}
+    </>
+  );
+}
+
+function SendConfirmSheet({ flagged, statuses, period, onClose, onConfirm }) {
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle"/>
+        <div className="sheet-title">ยืนยันการส่งแจ้งเตือน</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '0 20px 12px' }}>
+          ระบบจะส่ง LINE หาผู้ปกครอง {flagged.length} คน (เฉพาะคนที่ไม่ได้มา)
+        </div>
+        <div style={{ padding: '0 20px', overflow: 'auto', flex: 1 }}>
+          <div style={{ background: 'var(--primary-tint)', border: '1px solid var(--primary-soft-strong)', borderRadius: 10, padding: 10, fontSize: 12, color: 'var(--primary)', marginBottom: 8 }}>
+            ใช้โควต้า LINE {flagged.length} ข้อความ · เหลือ {window.D.SCHOOL.lineQuotaTotal - window.D.SCHOOL.lineQuotaUsed - flagged.length} ข้อความเดือนนี้
+          </div>
+          <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: 4 }}>
+            {flagged.map(s => (
+              <div key={s.no} style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, borderBottom: '1px solid var(--divider)' }}>
+                <span className="tnum" style={{ width: 24, color: 'var(--text-subtle)', fontSize: 12 }}>{s.no}</span>
+                <span style={{ flex: 1 }}>{s.prefix}{s.fname} {s.lname}</span>
+                <span className="status" data-s={statuses[s.no]}>{{ absent: 'ขาด', leave: 'ลา', late: 'สาย' }[statuses[s.no]]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '14px 20px 0', display: 'flex', gap: 8 }}>
+          <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>กลับไปแก้</button>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={onConfirm}>{window.ICONS.send} ส่งเลย</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AttSuccessOverlay({ data, onClose }) {
+  useEffect_M(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, []);
+  return (
+    <div className="att-success">
+      <div className="att-success-check fade-in">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>บันทึกเรียบร้อย</h2>
+      <p>ส่ง LINE แจ้งผู้ปกครอง {data.flagged} คน<br/>คาบ {data.period.period} · {data.period.subject}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: 280, marginTop: 24 }}>
+        <div className="att-success-stat"><div className="n tnum" style={{ color: 'var(--present)' }}>{data.counts.present}</div><div className="l">มา</div></div>
+        <div className="att-success-stat"><div className="n tnum" style={{ color: 'var(--absent)' }}>{data.counts.absent + data.counts.leave + data.counts.late}</div><div className="l">ไม่มา</div></div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { HomePage, DashboardPage, StudentsPage, AttendancePage });
+
+</script>
+  <script type="text/babel">
+// pages-secondary.jsx — Classrooms, Parents/LINE, Reports, Notifications, Settings
+
+const { useState: useState_S, useMemo: useMemo_S, useEffect: useEffect_S, useRef: useRef_S } = React;
+
+// ═════════════════════════════════════════════════════════
+//  CLASSROOMS PAGE
+// ═════════════════════════════════════════════════════════
+function ClassroomsPage({ navigate, route, isMobile }) {
+  const selectedId = route.params.get('id') || window.D.CLASSROOMS[2].id;
+  const selected = window.D.getClass(selectedId);
+  const teacher = selected ? window.D.getTeacher(selected.teacherId) : null;
+
+  return (
+    <div className="page-body">
+      <PageHeader title="ห้องเรียน" subtitle={`${window.D.CLASSROOMS.length} ห้อง · ${window.D.SCHOOL.studentTotal} คน`}
+        actions={!isMobile && <button className="btn btn-primary btn-sm">{window.ICONS.plus} เพิ่มห้อง</button>}/>
+
+      <div style={{ padding: '0 28px 24px' }}>
+        <div className="room-bigtable">
+          {window.D.CLASSROOMS.map(c => {
+            const t = window.D.getTeacher(c.teacherId);
+            const pct = c.present/c.count, miss = c.count - c.present;
+            const active = c.id === selectedId;
+            return (
+              <div key={c.id} className={`room-big ${active ? 'active' : ''} ${miss === 0 ? '' : miss > 2 ? 'bad' : 'partial'}`}
+                onClick={() => navigate('classrooms', { id: c.id })}>
+                <div className="room-big-h">
+                  <div className="room-big-nm">{c.name}</div>
+                  <div className="room-big-cnt">{c.count} คน</div>
+                </div>
+                <div className="room-big-t">
+                  <div className="avatar-sm" style={{ width: 26, height: 26, fontSize: 10, background: t?.color }}>{t?.initials}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>ครู{t?.fname} {t?.lname}</div>
+                </div>
+                <div className="room-big-stat">
+                  <span className="big-n tnum">{c.present}</span><span className="big-d">/{c.count}</span>
+                  {miss === 0 ? <span className="ok">✓ ครบ</span> : <span className="bad-n">−{miss} คน</span>}
+                </div>
+                <div className="pct-bar"><div style={{ width: `${pct*100}%` }}/></div>
+              </div>
+            );
+          })}
+        </div>
+
+        {selected && !isMobile && (
+          <div className="panel" style={{ marginTop: 16 }}>
+            <div className="panel-head">
+              <h2>รายละเอียดห้อง {selected.name}</h2>
+              <span className="sub">ครูประจำชั้น: ครู{teacher?.fname} {teacher?.lname}</span>
+              <div className="right">
+                <button className="btn btn-outline btn-sm" onClick={() => navigate('students')}>ดูนักเรียน</button>
+                <button className="btn btn-outline btn-sm" onClick={() => navigate('attendance')}>เช็คชื่อ</button>
+              </div>
+            </div>
+            <div style={{ padding: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10, marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, padding: '4px 0' }}></div>
+                {window.D.PERIODS.map((p, i) => (
+                  <div key={i} style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center' }}>
+                    คาบ {p.no}<br/><span className="tnum" style={{ fontWeight: 500 }}>{p.start}</span>
+                  </div>
+                ))}
+                {['จ', 'อ', 'พ', 'พฤ', 'ศ'].map((d, dayIdx) => (
+                  <React.Fragment key={d}>
+                    <div style={{ fontSize: 13, fontWeight: 600, padding: '6px 0', display: 'flex', alignItems: 'center' }}>{d}.</div>
+                    {window.D.PERIODS.map((p, i) => {
+                      const subj = window.D.SUBJECTS[(i + dayIdx) % window.D.SUBJECTS.length];
+                      return (
+                        <div key={i} style={{ background: subj.color + '15', border: `1px solid ${subj.color}30`, color: subj.color, padding: '8px 6px', borderRadius: 6, fontSize: 11, fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>
+                          {subj.code}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                {window.D.SUBJECTS.map(s => (
+                  <span key={s.code} style={{ background: s.color + '15', color: s.color, padding: '2px 8px', borderRadius: 99, fontWeight: 600 }}>{s.code} {s.name}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  PARENTS · LINE — chat list + chat view
+// ═════════════════════════════════════════════════════════
+function ParentsPage({ navigate, route, isMobile }) {
+  const selectedId = route.params.get('id');
+  const showList = !isMobile || !selectedId;
+  const showChat = !isMobile || selectedId;
+  const parent = selectedId ? window.D.getParent(selectedId) : window.D.PARENTS[0];
+
+  return (
+    <div className="page-body">
+      {showList && !isMobile && <PageHeader title="ผู้ปกครอง · LINE" subtitle={`${window.D.PARENTS.length} ครอบครัว · ${window.D.PARENTS.filter(p => p.lineLinked).length} เชื่อม LINE แล้ว`}/>}
+      <div className={`parents-layout ${isMobile ? 'mobile' : ''}`}>
+        {showList && <ParentsList active={parent?.id} navigate={navigate} isMobile={isMobile}/>}
+        {showChat && parent && <ParentChat parent={parent} navigate={navigate} isMobile={isMobile}/>}
+      </div>
+    </div>
+  );
+}
+
+function ParentsList({ active, navigate, isMobile }) {
+  const [q, setQ] = useState_S('');
+  const [filter, setFilter] = useState_S('all'); // all | unread | linked
+
+  let list = window.D.PARENTS;
+  if (filter === 'unread') list = list.filter(p => p.unread > 0);
+  if (filter === 'linked') list = list.filter(p => p.lineLinked);
+  if (q) list = list.filter(p => p.name.includes(q));
+
+  return (
+    <div className="parents-list-pane">
+      <div className="parents-search">
+        <div className="search-box">{window.ICONS.search}<input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาผู้ปกครอง"/></div>
+        <div className="filter-tabs">
+          <button className={filter==='all'?'active':''} onClick={() => setFilter('all')}>ทั้งหมด</button>
+          <button className={filter==='unread'?'active':''} onClick={() => setFilter('unread')}>ยังไม่อ่าน</button>
+          <button className={filter==='linked'?'active':''} onClick={() => setFilter('linked')}>เชื่อม LINE</button>
+        </div>
+      </div>
+      <div className="parents-list scroll-y">
+        {list.map(p => {
+          const student = window.D.getStudent(p.studentId);
+          return (
+            <div key={p.id} className={`chat-list-row ${active === p.id ? 'active' : ''}`} onClick={() => navigate('parents', { id: p.id })}>
+              <div className="avatar-sm" style={{ width: 44, height: 44, fontSize: 16, background: 'var(--accent)', position: 'relative' }}>
+                {p.name.charAt(p.name.search(/[ก-ฮ]/))}
+                {p.lineLinked && <span style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: 'var(--line)', border: '2px solid var(--surface)' }}/>}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="chat-list-h">
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</span>
+                  <span className="chat-list-time tnum">{p.snippet_time}</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                  {p.relation}ของ {student?.prefix}{student?.fname}
+                </div>
+                <div className="chat-list-snippet">
+                  {p.lastMessage}
+                  {p.unread > 0 && <span className="chat-unread tnum">{p.unread}</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ParentChat({ parent, navigate, isMobile }) {
+  const [text, setText] = useState_S('');
+  const [messages, setMessages] = useState_S(() => window.D.CHATS[parent.id] || [
+    { kind: 'date', text: 'วันนี้' },
+    { from: 'system', text: '— ยังไม่เคยส่งข้อความถึงผู้ปกครองรายนี้ —' },
+  ]);
+  const student = window.D.getStudent(parent.studentId);
+  const bodyRef = useRef_S(null);
+
+  useEffect_S(() => {
+    setMessages(window.D.CHATS[parent.id] || [
+      { kind: 'date', text: 'วันนี้' },
+      { from: 'system', text: '— ยังไม่เคยส่งข้อความถึงผู้ปกครองรายนี้ —' },
+    ]);
+  }, [parent.id]);
+
+  useEffect_S(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+  }, [messages]);
+
+  const send = () => {
+    if (!text.trim()) return;
+    const newMsg = { from: 'out', text: text.trim(), time: 'เพิ่งส่ง' };
+    setMessages([...messages, newMsg]);
+    setText('');
+  };
+
+  const suggestions = [
+    'ขอบคุณที่แจ้งค่ะ ดูแลน้องด้วยนะคะ',
+    'มีอะไรให้ครูช่วยเหลือไหมคะ',
+    'ส่งใบรับรองแพทย์ทาง LINE ได้เลยค่ะ',
+  ];
+
+  return (
+    <div className="parents-chat-pane">
+      <div className="chat-head">
+        {isMobile && <button className="back-btn" onClick={() => navigate('parents')}>{window.ICONS.chevL}</button>}
+        <div className="avatar-sm" style={{ width: 36, height: 36, fontSize: 13, background: 'var(--accent)' }}>{parent.name.charAt(parent.name.search(/[ก-ฮ]/))}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{parent.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            {parent.relation}ของ {student?.prefix}{student?.fname} {student?.lname} ·
+            {parent.lineLinked ? <span style={{ background: 'var(--line)', color: '#fff', padding: '0 6px', borderRadius: 99, fontSize: 9, marginLeft: 4 }}>LINE</span> : ' รอเชื่อม'}
+          </div>
+        </div>
+        <button className="btn-icon-32"><span style={{ width: 18, height: 18, display: 'inline-flex' }}>{window.ICONS.phone}</span></button>
+      </div>
+      <div className="ai-banner">{window.ICONS.sparkle}<span>AI ตีความข้อความผู้ปกครองและเปลี่ยนสถานะเด็กให้อัตโนมัติ</span></div>
+      <div className="chat-body" ref={bodyRef}>
+        {messages.map((m, i) => {
+          if (m.kind === 'date') return <div className="chat-date" key={i}>{m.text}</div>;
+          if (m.from === 'system') return <div className="chat-system" key={i}>{m.text}</div>;
+          if (m.from === 'system-ai') return <div className="chat-system ai" key={i}>{window.ICONS.sparkle} {m.text}</div>;
+          return (
+            <div className={`chat-msg ${m.from}`} key={i}>
+              {m.text}
+              {m.time && <div className="chat-time tnum">{m.time}</div>}
+            </div>
+          );
+        })}
+      </div>
+      <div className="chat-suggest">
+        <div className="lab">{window.ICONS.sparkle} AI แนะนำ</div>
+        <div className="chips">
+          {suggestions.map((s, i) => <button key={i} onClick={() => setText(s)}>{s}</button>)}
+        </div>
+      </div>
+      <div className="chat-input">
+        <textarea value={text} onChange={e => setText(e.target.value)} placeholder="พิมพ์ข้อความ…"
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}/>
+        <button className="chat-send" onClick={send} disabled={!text.trim()}>{window.ICONS.send}</button>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  REPORTS PAGE
+// ═════════════════════════════════════════════════════════
+function ReportsPage({ navigate, isMobile }) {
+  const [downloadModal, setDownloadModal] = useState_S(null);
+  return (
+    <div className="page-body">
+      <PageHeader title="รายงาน · ส่งออกข้อมูล" subtitle={`${window.D.SCHOOL.semester} · ข้อมูลย้อนหลัง 5 ปี`}/>
+      <div style={{ padding: '0 28px 24px' }}>
+        <div className="reports-grid">
+          {window.D.REPORTS.map(r => {
+            const icoBg = r.primary ? 'var(--primary)' : r.icon === 'alert' ? 'var(--absent)' : 'var(--surface-2)';
+            const icoCol = r.primary || r.icon === 'alert' ? '#fff' : 'var(--text-muted)';
+            return (
+              <div key={r.id} className={`report-card ${r.primary ? 'primary' : ''}`}>
+                <div className="report-icon" style={{ background: icoBg, color: icoCol }}>{window.ICONS[r.icon] || window.ICONS.doc}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="report-nm">{r.name}</div>
+                  <div className="report-d">{r.desc}</div>
+                  <div className="report-meta">
+                    <span>📅 {r.period}</span>·
+                    <span>📄 {r.format}</span>·
+                    <span>💾 {r.size}</span>·
+                    <span style={{ color: r.primary ? 'var(--primary)' : 'var(--text-subtle)' }}>{r.updated}</span>
+                  </div>
+                </div>
+                <button className={r.primary ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'} onClick={() => setDownloadModal(r)}>
+                  {r.primary ? <>ส่งเข้า DMC →</> : <>{window.ICONS.download} ดาวน์โหลด</>}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {downloadModal && (
+        <div className="modal-backdrop" onClick={() => setDownloadModal(null)}>
+          <div className="modal modal-sm fade-in" onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <div className="modal-head-icon">{window.ICONS.download}</div>
+              <div style={{ flex: 1 }}>
+                <h3>{downloadModal.name}</h3>
+                <div className="sub">{downloadModal.period} · {downloadModal.format}</div>
+              </div>
+              <button className="modal-close" onClick={() => setDownloadModal(null)}>{window.ICONS.x}</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: 14, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                ระบบจะสร้างไฟล์รายงานจาก {window.D.SCHOOL.studentTotal} นักเรียน · 8 ห้อง · กระบวนการใช้เวลาประมาณ 10-20 วินาที
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+                <span className="chip primary">เดือนนี้</span><span className="chip">3 เดือน</span><span className="chip">เทอม</span>
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn btn-outline" onClick={() => setDownloadModal(null)}>ยกเลิก</button>
+              <button className="btn btn-primary" onClick={() => setDownloadModal(null)}>{window.ICONS.download} สร้างและดาวน์โหลด</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  NOTIFICATIONS PAGE
+// ═════════════════════════════════════════════════════════
+function NotificationsPage({ isMobile }) {
+  const [filter, setFilter] = useState_S('all');
+  let list = window.D.NOTIFICATIONS;
+  if (filter !== 'all') list = list.filter(n => n.type === filter);
+
+  return (
+    <div className="page-body">
+      <PageHeader title="การแจ้งเตือน" subtitle={`${window.D.NOTIFICATIONS.length} รายการ`}/>
+      <div style={{ padding: '0 28px 24px' }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflow: 'auto', paddingBottom: 4 }} className="no-scrollbar">
+          <button className={`chip ${filter==='all'?'active':''}`} onClick={() => setFilter('all')}>ทั้งหมด</button>
+          <button className={`chip ${filter==='absence'?'active':''}`} onClick={() => setFilter('absence')}>แจ้งขาด</button>
+          <button className={`chip ${filter==='reply'?'active':''}`} onClick={() => setFilter('reply')}>ตอบกลับ</button>
+          <button className={`chip ${filter==='alert'?'active':''}`} onClick={() => setFilter('alert')}>เด็กขาดบ่อย</button>
+          <button className={`chip ${filter==='quota'?'active':''}`} onClick={() => setFilter('quota')}>โควต้า</button>
+          <button className={`chip ${filter==='system'?'active':''}`} onClick={() => setFilter('system')}>ระบบ</button>
+        </div>
+        <div className="panel">
+          {list.map(n => (
+            <div className="notif-row" key={n.id}>
+              <div className={`notif-icon ${n.severity || 'ok'}`}>
+                {window.ICONS[n.type === 'reply' ? 'msg' : n.type === 'alert' ? 'alert' : n.type === 'absence' ? 'check' : n.type === 'quota' ? 'msg' : 'set']}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="notif-h">{n.title}</div>
+                <div className="notif-b">{n.body}</div>
+              </div>
+              <div className="notif-t tnum">{n.time}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════
+//  SETTINGS / ONBOARDING
+// ═════════════════════════════════════════════════════════
+function SettingsPage({ isMobile }) {
+  const [tab, setTab] = useState_S('school');
+  const tabs = [
+    { key: 'school',    label: 'ข้อมูลโรงเรียน' },
+    { key: 'teachers',  label: 'ครู' },
+    { key: 'subjects',  label: 'วิชา' },
+    { key: 'line',      label: 'LINE OA' },
+    { key: 'users',     label: 'ผู้ใช้ระบบ' },
+  ];
+  return (
+    <div className="page-body">
+      <PageHeader title="ตั้งค่าระบบ" subtitle="โรงเรียน · ครู · วิชา · LINE OA · ผู้ใช้"/>
+      <div style={{ padding: '0 28px 24px' }}>
+        <div className="tab-bar">
+          {tabs.map(t => (
+            <button key={t.key} className={`tab-btn ${tab===t.key?'active':''}`} onClick={() => setTab(t.key)}>{t.label}</button>
+          ))}
+        </div>
+        <div className="panel" style={{ padding: 24 }}>
+          {tab === 'school' && <SetTabSchool/>}
+          {tab === 'teachers' && <SetTabTeachers/>}
+          {tab === 'subjects' && <SetTabSubjects/>}
+          {tab === 'line' && <SetTabLine/>}
+          {tab === 'users' && <SetTabUsers/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SetTabSchool() {
+  return (
+    <div className="set-form">
+      <div className="form-row">
+        <div className="field"><label>ชื่อโรงเรียน</label><input defaultValue={window.D.SCHOOL.name}/></div>
+        <div className="field"><label>รหัส สพฐ.</label><input className="tnum" defaultValue={window.D.SCHOOL.code}/></div>
+      </div>
+      <div className="form-row">
+        <div className="field"><label>จังหวัด</label><input defaultValue={window.D.SCHOOL.province}/></div>
+        <div className="field"><label>อำเภอ</label><input defaultValue={window.D.SCHOOL.district}/></div>
+      </div>
+      <div className="form-row">
+        <div className="field" style={{ gridColumn: 'span 2' }}><label>ที่อยู่</label><input defaultValue="123 หมู่ 5 ต.หนองบัว อ.เมืองนครราชสีมา 30000"/></div>
+      </div>
+      <div className="form-row">
+        <div className="field"><label>ผู้อำนวยการ</label><input defaultValue={window.D.SCHOOL.director}/></div>
+        <div className="field"><label>ภาคเรียนปัจจุบัน</label><select defaultValue={window.D.SCHOOL.semester}><option>ภาคเรียนที่ 1 ปีการศึกษา 2568</option><option>ภาคเรียนที่ 2 ปีการศึกษา 2568</option></select></div>
+      </div>
+      <div style={{ marginTop: 18, display: 'flex', gap: 8 }}>
+        <button className="btn btn-primary">บันทึก</button>
+        <button className="btn btn-outline">รีเซ็ต</button>
+      </div>
+    </div>
+  );
+}
+
+function SetTabTeachers() {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{window.D.TEACHERS.length} คนในระบบ</div>
+        <button className="btn btn-primary btn-sm">{window.ICONS.plus} เพิ่มครู</button>
+      </div>
+      <div className="data-table">
+        <div className="data-table-head">
+          <div></div><div>ชื่อ</div><div>วิชา / บทบาท</div><div>เบอร์โทร</div><div>สถานะ</div><div></div>
+        </div>
+        {window.D.TEACHERS.map(t => (
+          <div className="data-table-row" key={t.id}>
+            <div className="avatar-sm" style={{ width: 32, height: 32, fontSize: 12, background: t.color }}>{t.initials}</div>
+            <div>
+              <div style={{ fontWeight: 500 }}>{t.fname} {t.lname}</div>
+              {t.role === 'admin' && <span className="chip primary" style={{ height: 18, fontSize: 10, padding: '0 6px' }}>ผู้บริหาร</span>}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.subject}</div>
+            <div className="tnum" style={{ fontSize: 13 }}>{t.phone}</div>
+            <div><span className="chip" style={{ background: t.online?'var(--present-soft)':'var(--surface-2)', color: t.online?'var(--present-strong)':'var(--text-subtle)' }}>● {t.online ? 'online' : 'offline'}</span></div>
+            <button className="btn btn-ghost btn-sm">{window.ICONS.more}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SetTabSubjects() {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{window.D.SUBJECTS.length} วิชา</div>
+        <button className="btn btn-primary btn-sm">{window.ICONS.plus} เพิ่มวิชา</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+        {window.D.SUBJECTS.map(s => (
+          <div key={s.code} className="subj-card">
+            <div className="subj-sw" style={{ background: s.color }}>{s.code}</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{s.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>รหัส {s.code}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SetTabLine() {
+  return (
+    <div>
+      <div className="line-status-card">
+        <div className="line-icon">LINE</div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>เชื่อม LINE OA สำเร็จ ✓</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '4px 0 0' }}>
+            Bot ID: <strong style={{ color: 'var(--text)' }}>@nongbua-school</strong> · ผู้ปกครองที่เชื่อมแล้ว: <strong style={{ color: 'var(--text)' }}>156 คน</strong>
+          </p>
+          <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <span className="chip" style={{ background: 'var(--present-soft)', color: 'var(--present-strong)' }}>● Active</span>
+            <span className="chip">โควต้า Light · 5,000/เดือน</span>
+            <span className="chip">ใช้ {window.D.SCHOOL.lineQuotaUsed} แล้ว</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="form-row" style={{ marginTop: 20 }}>
+        <div className="field"><label>Channel Access Token</label><input type="password" defaultValue="••••••••••••••••••••••••••••••••"/></div>
+        <div className="field"><label>Channel Secret</label><input type="password" defaultValue="••••••••••••••••"/></div>
+      </div>
+      <div className="form-row">
+        <div className="field" style={{ gridColumn: 'span 2' }}><label>Webhook URL</label><input readOnly value="https://attend.school.go.th/webhook/nongbua" style={{ background: 'var(--surface-2)', fontFamily: 'var(--font-mono)', fontSize: 12 }}/></div>
+      </div>
+      <div style={{ marginTop: 14, padding: 14, background: 'var(--primary-tint)', borderRadius: 10, fontSize: 13, color: 'var(--text)', lineHeight: 1.7 }}>
+        <strong>💡 โควต้า LINE:</strong> Free 500/เดือน · Light 5,000/เดือน 1,200฿ · Standard 30,000/เดือน 1,500฿<br/>
+        <span style={{ color: 'var(--text-muted)' }}>หากใช้อัตราปัจจุบัน คาดว่าจะหมดในประมาณ 18 วัน — แนะนำให้อัปเกรดเป็น Standard</span>
+      </div>
+      <div style={{ marginTop: 18, display: 'flex', gap: 8 }}>
+        <button className="btn btn-outline">ทดสอบเชื่อมต่อ</button>
+        <button className="btn btn-primary">บันทึก</button>
+      </div>
+    </div>
+  );
+}
+
+function SetTabUsers() {
+  return (
+    <div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
+        ผู้ใช้ระบบทั้งหมดสามารถ login ได้จากหน้านี้ — ครูประจำชั้นเช็คชื่อได้ทุกคาบของห้องตัวเอง · ครูประจำวิชาเช็คได้เฉพาะคาบที่สอน
+      </div>
+      <div className="data-table">
+        <div className="data-table-head">
+          <div></div><div>ชื่อ</div><div>สิทธิ์</div><div>เข้าใช้ล่าสุด</div><div></div>
+        </div>
+        {window.D.TEACHERS.slice(0, 8).map(t => (
+          <div className="data-table-row" key={t.id} style={{ gridTemplateColumns: '40px 2fr 1fr 1.2fr 80px' }}>
+            <div className="avatar-sm" style={{ width: 32, height: 32, fontSize: 12, background: t.color }}>{t.initials}</div>
+            <div style={{ fontWeight: 500 }}>{t.fname} {t.lname}</div>
+            <div><span className="chip primary" style={{ height: 22 }}>{t.role === 'admin' ? 'ผู้บริหาร' : 'ครู'}</span></div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.online ? 'ออนไลน์อยู่' : `2 วันที่แล้ว`}</div>
+            <button className="btn btn-ghost btn-sm">{window.ICONS.more}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { ClassroomsPage, ParentsPage, ReportsPage, NotificationsPage, SettingsPage });
+
+</script>
+  <script type="text/babel">
+// app.jsx — main App + routing + session
+const { useState: useState_A, useEffect: useEffect_A } = React;
+
+function App() {
+  const [session, login, logout] = window.useSession();
+  const [route, navigate] = window.useHashRoute('home');
+  const [theme, setTheme] = window.useTheme();
+  const [moreOpen, setMoreOpen] = useState_A(false);
+  const isMobile = window.useMediaQuery('(max-width: 1023px)');
+
+  // Page registry
+  const PAGES = {
+    home:          window.HomePage,
+    dashboard:     window.DashboardPage,
+    attendance:    window.AttendancePage,
+    students:      window.StudentsPage,
+    classrooms:    window.ClassroomsPage,
+    parents:       window.ParentsPage,
+    reports:       window.ReportsPage,
+    notifications: window.NotificationsPage,
+    settings:      window.SettingsPage,
+  };
+
+  // No session → show login
+  if (!session) {
+    return <window.LoginPage onLogin={login}/>;
+  }
+
+  const Page = PAGES[route.path] || PAGES.home;
+  const navItem = window.NAV_ITEMS.find(n => n.key === route.path);
+  const isFullscreenMobile = isMobile && navItem?.mobileFullscreen;
+  const pageTitle = navItem?.label || 'หน้าหลัก';
+
+  return (
+    <div className={`app-shell ${isMobile ? 'is-mobile' : ''}`}>
+      {!isMobile && (
+        <Sidebar route={route} navigate={navigate} theme={theme} setTheme={setTheme} user={session} onLogout={logout}/>
+      )}
+
+      <div className="main-col">
+        {isMobile && !isFullscreenMobile && route.path !== 'home' && (
+          <MobileTopBar title={pageTitle} onOpenMore={() => setMoreOpen(true)}/>
+        )}
+        {isMobile && route.path === 'home' && (
+          <MobileTopBar title={window.D.SCHOOL.short} onOpenMore={() => setMoreOpen(true)}/>
+        )}
+
+        {!isMobile && (
+          <div className="page-topbar">
+            <div className="crumb">
+              {navItem?.sec || ''} · <strong>{navItem?.label || 'หน้าหลัก'}</strong>
+            </div>
+            <div className="right">
+              <div className="page-topbar-search">
+                <span style={{ color: 'var(--text-subtle)', display: 'flex' }}>{window.ICONS.search}</span>
+                <input placeholder="ค้นหานักเรียน, ห้อง, ครู…"/>
+              </div>
+              <button className="page-topbar-icon-btn" onClick={() => navigate('notifications')} style={{ position: 'relative' }}>
+                {window.ICONS.bell}
+                <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, background: 'var(--absent)', borderRadius: '50%', border: '2px solid var(--surface-2)' }}/>
+              </button>
+            </div>
+          </div>
+        )}
+
+        <main className="main-content scroll-y">
+          <Page navigate={navigate} route={route} isMobile={isMobile} user={session}/>
+        </main>
+
+        {isMobile && !isFullscreenMobile && (
+          <MobileBottomNav route={route} navigate={navigate}/>
+        )}
+      </div>
+
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} navigate={navigate} route={route}
+        theme={theme} setTheme={setTheme} user={session} onLogout={logout}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+</script>
+</body>
+</html>
