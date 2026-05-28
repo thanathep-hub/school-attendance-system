@@ -377,6 +377,12 @@ input, textarea, select { font-family: inherit; color: inherit; }
 .cal-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
 .parent-card { padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
 
+/* Student form fields (A.6) */
+.sf-field { display: flex; flex-direction: column; gap: 4px; }
+.sf-field > span { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.sf-field input, .sf-field select { height: 40px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: all var(--dur); }
+.sf-field input:focus, .sf-field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
 @media (max-width: 1023px) {
   .students-layout { grid-template-columns: 1fr; padding: 0; }
   .sd-stats { grid-template-columns: repeat(2, 1fr); }
@@ -870,6 +876,49 @@ window.D = (function() {
   };
 })();
 
+</script>
+  <script>
+// ─── Backend API (Google Apps Script) ────────────────────
+window.API_URL = 'https://script.google.com/macros/s/AKfycbzmhpAlkezFGSf15FEq6PrjBFTLW4_TEnRrHraW3WkdDrdsWe3qyttDr5LoFiXWj3SyKQ/exec';
+
+window.getToken = function() {
+  try { return (JSON.parse(localStorage.getItem('v2_session') || 'null') || {}).token || ''; } catch (e) { return ''; }
+};
+
+window.apiCall = async function(payload) {
+  const res = await fetch(window.API_URL, {
+    method: 'POST',
+    mode: 'cors',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+};
+
+// Map API student (flat row) → UI shape used by StudentsPage / StudentDetail
+window.mapStudent = function(s) {
+  let prefix = '', rest = String(s.name || '');
+  const m = rest.match(/^(ด\.ช\.|ด\.ญ\.|เด็กชาย|เด็กหญิง|นางสาว|นาย|นาง)\s*/);
+  if (m) { prefix = m[1]; rest = rest.slice(m[0].length); }
+  const parts = rest.trim().split(/\s+/);
+  const fname = parts[0] || rest || '?';
+  const lname = parts.slice(1).join(' ');
+  const cls = (window.D.CLASSROOMS || []).find(c => c.name === s.classroom);
+  let age = '';
+  if (s.birthdate) { try { age = Math.floor((Date.now() - new Date(s.birthdate).getTime()) / (365.25 * 24 * 3600 * 1000)); } catch (e) {} }
+  return {
+    id: String(s.id), rawId: s.id,
+    classroomId: cls ? cls.id : s.classroom, classroomName: s.classroom || '',
+    no: s.id, prefix, fname, lname,
+    nickname: s.nickname || '', studentCode: s.student_code || '',
+    gender: s.gender || '', phone: s.phone || '',
+    parentName: s.parent_name || '', parentPhone: s.parent_phone || '',
+    lineId: s.line_id || '', birthdate: s.birthdate || '', age: age,
+    absentStreak: 0, alert: false,
+  };
+};
 </script>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -1586,49 +1635,65 @@ function ContactAIModal({ student, onClose }) {
 //  STUDENTS PAGE (list + detail)
 // ═════════════════════════════════════════════════════════
 function StudentsPage({ navigate, route, isMobile }) {
-  const [filter, setFilter] = useState_M('all');
   const [q, setQ] = useState_M('');
   const [classFilter, setClassFilter] = useState_M('all');
+  const [students, setStudents] = useState_M([]);
+  const [loading, setLoading] = useState_M(true);
+  const [error, setError] = useState_M(null);
+  const [formOpen, setFormOpen] = useState_M(false);
+  const [editing, setEditing] = useState_M(null);
   const selectedId = route.params.get('id');
 
+  async function load() {
+    setLoading(true); setError(null);
+    try {
+      const res = await window.apiCall({ action: 'getStudents', token: window.getToken() });
+      if (!res.success) throw new Error(res.message || 'โหลดข้อมูลไม่สำเร็จ');
+      setStudents((res.data || []).map(window.mapStudent));
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  }
+  useEffect_M(() => { load(); }, []);
+
   const list = useMemo_M(() => {
-    let r = window.D.ALL_STUDENTS;
+    let r = students;
     if (classFilter !== 'all') r = r.filter(s => s.classroomId === classFilter);
-    if (filter === 'alert') r = r.filter(s => s.alert);
-    if (filter === 'today') r = r.filter(s => s.alert || s.no <= 5);
-    if (q) r = r.filter(s => (s.fname + s.lname).includes(q) || String(s.no).includes(q));
+    if (q) r = r.filter(s => (s.fname + s.lname + s.nickname).includes(q) || String(s.studentCode).includes(q));
     return r;
-  }, [filter, q, classFilter]);
+  }, [students, q, classFilter]);
 
-  const selected = selectedId ? window.D.getStudent(selectedId) : list[0];
+  const selected = selectedId ? students.find(s => s.id === selectedId) : list[0];
 
-  // On mobile, when a student selected → show only detail
   const showDetailOnMobile = isMobile && selectedId;
   const showListOnMobile = isMobile && !selectedId;
 
+  const openCreate = () => { setEditing(null); setFormOpen(true); };
+  const openEdit = (s) => { setEditing(s); setFormOpen(true); };
+
   return (
     <div className="page-body">
-      {!showDetailOnMobile && <PageHeader title="นักเรียน" subtitle={`${list.length} จาก ${window.D.ALL_STUDENTS.length} คน`}/>}
+      {!showDetailOnMobile && (
+        <PageHeader title="นักเรียน" subtitle={`${list.length} จาก ${students.length} คน`}
+          actions={<button className="btn btn-primary btn-sm" onClick={openCreate}>+ เพิ่มนักเรียน</button>}/>
+      )}
       <div className={`students-layout ${isMobile ? 'mobile' : ''}`}>
         {(!isMobile || showListOnMobile) && (
           <div className="students-list-pane">
             <div className="students-filter">
               <div className="search-box">
                 {window.ICONS.search}
-                <input placeholder="ค้นหาชื่อ / เลขที่" value={q} onChange={e => setQ(e.target.value)}/>
+                <input placeholder="ค้นหาชื่อ / ชื่อเล่น / รหัส" value={q} onChange={e => setQ(e.target.value)}/>
               </div>
               <select value={classFilter} onChange={e => setClassFilter(e.target.value)}>
                 <option value="all">ทุกห้อง</option>
                 {window.D.CLASSROOMS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-              <div className="filter-tabs">
-                <button className={filter==='all'?'active':''} onClick={() => setFilter('all')}>ทั้งหมด</button>
-                <button className={filter==='today'?'active':''} onClick={() => setFilter('today')}>ไม่มาวันนี้</button>
-                <button className={filter==='alert'?'active':''} onClick={() => setFilter('alert')}>ต้องติดตาม</button>
-              </div>
             </div>
             <div className="students-list scroll-y">
-              {list.map(s => {
+              {loading && <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>กำลังโหลด…</div>}
+              {error && <div style={{ padding: 18, margin: 12, background: 'var(--absent-soft)', color: 'var(--absent-strong)', borderRadius: 8, fontSize: 12 }}>โหลดข้อมูลไม่สำเร็จ: {error} <button className="btn btn-sm btn-outline" style={{ marginTop: 8 }} onClick={load}>ลองใหม่</button></div>}
+              {!loading && !error && list.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>ไม่พบนักเรียน</div>}
+              {!loading && !error && list.map(s => {
                 const cls = window.D.getClass(s.classroomId);
                 const sColor = window.D.getTeacher(cls?.teacherId)?.color || 'var(--primary)';
                 return (
@@ -1636,10 +1701,9 @@ function StudentsPage({ navigate, route, isMobile }) {
                     onClick={() => navigate('students', { id: s.id })}>
                     <div className="avatar-sm" style={{ width: 38, height: 38, fontSize: 14, background: sColor }}>{s.fname[0]}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500 }}>{s.prefix}{s.fname} {s.lname}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500 }}>{s.prefix}{s.fname} {s.lname}{s.nickname && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> ({s.nickname})</span>}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                        {cls?.name} · เลขที่ {s.no}
-                        {s.alert && <span style={{ marginLeft: 6, color: 'var(--absent)', fontWeight: 600 }}>· ขาด {s.absentStreak} วันติด</span>}
+                        {s.classroomName} · รหัส {s.studentCode}
                       </div>
                     </div>
                     {window.ICONS.chevR}
@@ -1650,21 +1714,131 @@ function StudentsPage({ navigate, route, isMobile }) {
           </div>
         )}
         {(!isMobile || showDetailOnMobile) && selected && (
-          <StudentDetail student={selected} onBack={() => navigate('students')} isMobile={isMobile}/>
+          <StudentDetail student={selected} onBack={() => navigate('students')} isMobile={isMobile}
+            onEdit={() => openEdit(selected)} onChanged={() => { load(); navigate('students'); }}/>
         )}
+      </div>
+      {formOpen && (
+        <StudentFormModal student={editing} onClose={() => setFormOpen(false)}
+          onSaved={() => { setFormOpen(false); load(); }}/>
+      )}
+    </div>
+  );
+}
+
+// ─── Student create / edit modal (A.6) ───────────────────
+function StudentFormModal({ student, onClose, onSaved }) {
+  const isEdit = !!student;
+  const [f, setF] = useState_M({
+    student_code: student?.studentCode || '',
+    prefix: student?.prefix || 'ด.ช.',
+    name_only: student ? `${student.fname} ${student.lname}`.trim() : '',
+    nickname: student?.nickname || '',
+    classroom: student?.classroomName || 'ป.3/1',
+    gender: student?.gender || 'M',
+    phone: student?.phone || '',
+    parent_name: student?.parentName || '',
+    parent_phone: student?.parentPhone || '',
+  });
+  const [saving, setSaving] = useState_M(false);
+  const [err, setErr] = useState_M(null);
+  const set = (k, v) => setF(prev => ({ ...prev, [k]: v }));
+
+  const submit = async () => {
+    if (!f.name_only.trim()) { setErr('กรุณากรอกชื่อ-นามสกุล'); return; }
+    if (!f.classroom) { setErr('กรุณาเลือกห้อง'); return; }
+    setSaving(true); setErr(null);
+    try {
+      const data = {
+        student_code: f.student_code,
+        name: (f.prefix + f.name_only.trim()),
+        nickname: f.nickname,
+        classroom: f.classroom,
+        gender: f.gender,
+        phone: f.phone,
+        parent_name: f.parent_name,
+        parent_phone: f.parent_phone,
+      };
+      let res;
+      if (isEdit) res = await window.apiCall({ action: 'updateStudent', token: window.getToken(), studentId: student.rawId, data });
+      else        res = await window.apiCall({ action: 'createStudent', token: window.getToken(), data });
+      if (!res.success) throw new Error(res.message || 'บันทึกไม่สำเร็จ');
+      onSaved();
+    } catch (e) { setErr(e.message); setSaving(false); }
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>{isEdit ? 'แก้ไขนักเรียน' : 'เพิ่มนักเรียน'}</h2>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{isEdit ? student.prefix + student.fname + ' ' + student.lname : 'กรอกข้อมูลนักเรียนใหม่'}</div>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="panel-body" style={{ overflowY: 'auto' }}>
+          {err && <div style={{ background: 'var(--absent-soft)', color: 'var(--absent-strong)', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label className="sf-field"><span>คำนำหน้า</span>
+              <select value={f.prefix} onChange={e => set('prefix', e.target.value)}>
+                <option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option>
+                <option value="นาย">นาย</option><option value="นางสาว">นางสาว</option>
+              </select>
+            </label>
+            <label className="sf-field"><span>เพศ</span>
+              <select value={f.gender} onChange={e => set('gender', e.target.value)}>
+                <option value="M">ชาย</option><option value="F">หญิง</option>
+              </select>
+            </label>
+            <label className="sf-field" style={{ gridColumn: '1 / -1' }}><span>ชื่อ-นามสกุล *</span>
+              <input value={f.name_only} onChange={e => set('name_only', e.target.value)} placeholder="ภูมินทร์ ใจดี"/>
+            </label>
+            <label className="sf-field"><span>ชื่อเล่น</span>
+              <input value={f.nickname} onChange={e => set('nickname', e.target.value)} placeholder="ภูมิ"/>
+            </label>
+            <label className="sf-field"><span>รหัสนักเรียน</span>
+              <input value={f.student_code} onChange={e => set('student_code', e.target.value)} placeholder="12345"/>
+            </label>
+            <label className="sf-field"><span>ห้อง *</span>
+              <select value={f.classroom} onChange={e => set('classroom', e.target.value)}>
+                {window.D.CLASSROOMS.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
+            </label>
+            <label className="sf-field"><span>เบอร์นักเรียน</span>
+              <input value={f.phone} onChange={e => set('phone', e.target.value)} placeholder="081-xxx-xxxx"/>
+            </label>
+            <label className="sf-field"><span>ชื่อผู้ปกครอง</span>
+              <input value={f.parent_name} onChange={e => set('parent_name', e.target.value)} placeholder="นางสายฝน แก้วสุข"/>
+            </label>
+            <label className="sf-field"><span>เบอร์ผู้ปกครอง</span>
+              <input value={f.parent_phone} onChange={e => set('parent_phone', e.target.value)} placeholder="089-xxx-xxxx"/>
+            </label>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '14px 18px', borderTop: '1px solid var(--border)' }}>
+          <button className="btn btn-outline" onClick={onClose} disabled={saving}>ยกเลิก</button>
+          <button className="btn btn-primary" onClick={submit} disabled={saving}>{saving ? 'กำลังบันทึก…' : (isEdit ? 'บันทึกการแก้ไข' : 'เพิ่มนักเรียน')}</button>
+        </div>
       </div>
     </div>
   );
 }
 
-function StudentDetail({ student: s, onBack, isMobile }) {
+function StudentDetail({ student: s, onBack, isMobile, onEdit, onChanged }) {
   const cls = window.D.getClass(s.classroomId);
   const teacher = window.D.getTeacher(cls?.teacherId);
-  const present = window.D.HISTORY_DAYS.filter(d => d.status === 'present').length;
-  const absent  = window.D.HISTORY_DAYS.filter(d => d.status === 'absent').length;
-  const leave   = window.D.HISTORY_DAYS.filter(d => d.status === 'leave').length;
-  const late    = window.D.HISTORY_DAYS.filter(d => d.status === 'late').length;
-  const parent  = window.D.PARENTS.find(p => p.studentId === s.id);
+  const [deleting, setDeleting] = useState_M(false);
+  const [confirmDel, setConfirmDel] = useState_M(false);
+
+  const doDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await window.apiCall({ action: 'deleteStudent', token: window.getToken(), studentId: s.rawId });
+      if (!res.success) throw new Error(res.message);
+      onChanged && onChanged();
+    } catch (e) { alert('ลบไม่สำเร็จ: ' + e.message); setDeleting(false); }
+  };
 
   return (
     <div className="students-detail-pane">
@@ -1674,71 +1848,56 @@ function StudentDetail({ student: s, onBack, isMobile }) {
       <div className="sd-head">
         <div className="sd-avatar" style={{ background: teacher?.color || 'var(--primary)' }}>{s.fname[0]}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2>{s.prefix}{s.fname} {s.lname}</h2>
+          <h2>{s.prefix}{s.fname} {s.lname}{s.nickname && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 18 }}> ({s.nickname})</span>}</h2>
           <div className="sd-meta">
-            <span>{cls?.name} · เลขที่ {s.no}</span>·
-            <span className="tnum">รหัส {s.studentCode}</span>·
-            <span>อายุ {s.age} ปี</span>·
-            {s.alert
-              ? <span style={{ color: 'var(--absent)', fontWeight: 600 }}>⚠ ขาด {s.absentStreak} วันติด</span>
-              : <span style={{ color: 'var(--present-strong)', fontWeight: 600 }}>● กำลังศึกษา</span>}
+            <span>{s.classroomName}</span>·
+            <span className="tnum">รหัส {s.studentCode || '—'}</span>·
+            <span>{s.gender === 'F' ? 'หญิง' : 'ชาย'}</span>
+            {s.age !== '' && <>·<span>อายุ {s.age} ปี</span></>}
           </div>
         </div>
-        {!isMobile && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-outline btn-sm">{window.ICONS.phone}</button>
-            <button className="btn btn-primary btn-sm">{window.ICONS.msg} ส่ง LINE</button>
-          </div>
-        )}
-      </div>
-
-      <div className="sd-stats">
-        <div className="ministat"><div className="lab">มาเรียนเดือนนี้</div><div className="val tnum" style={{ color: 'var(--present-strong)' }}>{present}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>/22</span></div></div>
-        <div className="ministat"><div className="lab">ขาด</div><div className="val tnum" style={{ color: 'var(--absent)' }}>{absent}</div></div>
-        <div className="ministat"><div className="lab">ลา</div><div className="val tnum" style={{ color: 'var(--leave)' }}>{leave}</div></div>
-        <div className="ministat"><div className="lab">สาย</div><div className="val tnum" style={{ color: 'var(--late)' }}>{late}</div></div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-outline btn-sm" onClick={onEdit}>แก้ไข</button>
+          <button className="btn btn-outline btn-sm" style={{ color: 'var(--absent)', borderColor: 'var(--absent-soft)' }} onClick={() => setConfirmDel(true)}>ลบ</button>
+        </div>
       </div>
 
       <div className="panel" style={{ marginTop: 14 }}>
-        <div className="panel-head"><h2>ประวัติการมาเรียน · พฤษภาคม</h2><span className="sub">22 วันเรียน</span></div>
+        <div className="panel-head"><h2>ข้อมูลติดต่อ</h2></div>
         <div className="panel-body">
-          <div className="cal-grid">
-            {window.D.HISTORY_DAYS.map((d, i) => (
-              <div key={i} className="cal-day" data-s={d.status} title={`${d.date} พ.ค. — ${d.status}`}>{d.date}</div>
-            ))}
-          </div>
-          <div className="cal-legend">
-            <span><span className="sw" style={{ background: 'var(--present-soft)' }}/>มา</span>
-            <span><span className="sw" style={{ background: 'var(--absent-soft)' }}/>ขาด</span>
-            <span><span className="sw" style={{ background: 'var(--leave-soft)' }}/>ลา</span>
-            <span><span className="sw" style={{ background: 'var(--late-soft)' }}/>สาย</span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 18px', fontSize: 14 }}>
+            <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>เบอร์นักเรียน</div><div className="tnum">{s.phone || '—'}</div></div>
+            <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ชื่อผู้ปกครอง</div><div>{s.parentName || '—'}</div></div>
+            <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>เบอร์ผู้ปกครอง</div><div className="tnum">{s.parentPhone || '—'}</div></div>
+            <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>LINE</div><div>{s.lineId ? <span style={{ background: 'var(--line)', color: '#fff', padding: '1px 8px', borderRadius: 99, fontSize: 11, fontWeight: 600 }}>เชื่อมแล้ว</span> : <span style={{ color: 'var(--text-muted)' }}>ยังไม่เชื่อม</span>}</div></div>
           </div>
         </div>
       </div>
 
-      <div className="panel" style={{ marginTop: 14 }}>
-        <div className="panel-head"><h2>ผู้ปกครอง</h2></div>
-        <div>
-          {parent ? (
-            <div className="parent-card">
-              <div className="avatar-sm" style={{ width: 40, height: 40, fontSize: 14, background: 'var(--accent)' }}>{parent.name.charAt(parent.name.search(/[ก-ฮ]/))}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{parent.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <span>{parent.relation}</span>·
-                  <span className="tnum">{parent.phone}</span>·
-                  {parent.lineLinked
-                    ? <span style={{ background: 'var(--line)', color: '#fff', padding: '1px 8px', borderRadius: 99, fontSize: 10, fontWeight: 600 }}>LINE เชื่อมแล้ว</span>
-                    : <span style={{ background: 'var(--leave-soft)', color: 'var(--leave-strong)', padding: '1px 8px', borderRadius: 99, fontSize: 10, fontWeight: 600 }}>รอเชื่อม LINE</span>}
-                </div>
-              </div>
-              <button className="btn btn-sm btn-outline">{window.ICONS.msg} แชต</button>
-            </div>
-          ) : (
-            <div style={{ padding: 18, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>ยังไม่มีผู้ปกครองในระบบ · <a style={{ color: 'var(--primary)', cursor: 'pointer' }}>+ เพิ่ม</a></div>
-          )}
+      <div className="panel" style={{ marginTop: 14, opacity: 0.7 }}>
+        <div className="panel-head"><h2>ประวัติการมาเรียน</h2><span className="sub">รอ Phase 2.B</span></div>
+        <div className="panel-body">
+          <div style={{ padding: 14, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+            จะแสดงเมื่อระบบเช็คชื่อ (Phase 2.B) พร้อมใช้งาน
+          </div>
         </div>
       </div>
+
+      {confirmDel && (
+        <div className="modal-backdrop" onClick={() => setConfirmDel(false)}>
+          <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
+            <div className="modal-head"><h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>ยืนยันการลบ</h2></div>
+            <div className="panel-body" style={{ fontSize: 14 }}>
+              ต้องการลบ <strong>{s.prefix}{s.fname} {s.lname}</strong> ออกจากระบบใช่ไหม?
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>ข้อมูลจะถูกปิดใช้งาน (soft delete) — กู้คืนได้ภายหลังในชีต</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '14px 18px', borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-outline" onClick={() => setConfirmDel(false)} disabled={deleting}>ยกเลิก</button>
+              <button className="btn btn-danger" onClick={doDelete} disabled={deleting}>{deleting ? 'กำลังลบ…' : 'ลบนักเรียน'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
