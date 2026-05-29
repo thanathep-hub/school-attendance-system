@@ -1905,42 +1905,81 @@ function StudentDetail({ student: s, onBack, isMobile, onEdit, onChanged }) {
 // ═════════════════════════════════════════════════════════
 //  ATTENDANCE PAGE — mobile-fullscreen + desktop layout
 // ═════════════════════════════════════════════════════════
-function AttendancePage({ navigate, isMobile }) {
-  // Period selection
-  const [periodIdx, setPeriodIdx] = useState_M(1); // start at current period (idx 1)
-  // Statuses + notes
-  const [statuses, setStatuses] = useState_M(() => {
-    const init = {}; window.D.STUDENTS_P3_1.forEach(s => { init[s.no] = 'present'; }); return init;
-  });
+function AttendancePage({ navigate, isMobile, user }) {
+  // Phase 2.B — API-backed attendance check
+  const [classroom, setClassroom] = useState_M('ป.3/1');
+  const [students, setStudents] = useState_M([]);
+  const [statuses, setStatuses] = useState_M({}); // keyed by student.rawId
   const [notes, setNotes] = useState_M({});
+  const [loading, setLoading] = useState_M(true);
+  const [saving, setSaving] = useState_M(false);
+  const [loadError, setLoadError] = useState_M(null);
   const [filter, setFilter] = useState_M('all');
   const [query, setQuery] = useState_M('');
   const [showSend, setShowSend] = useState_M(false);
   const [success, setSuccess] = useState_M(null);
+  const [showHistory, setShowHistory] = useState_M(false);
 
-  const period = window.D.TODAY_SCHEDULE[periodIdx];
-  const subject = period?.subject;
+  const todayISO = new Date().toISOString().substring(0, 10);
+
+  async function load() {
+    setLoading(true); setLoadError(null);
+    try {
+      const [sRes, aRes] = await Promise.all([
+        window.apiCall({ action: 'getStudents', token: window.getToken(), classroom }),
+        window.apiCall({ action: 'getAttendance', token: window.getToken(), date: todayISO, classroom, period: '' }),
+      ]);
+      if (!sRes.success) throw new Error(sRes.message || 'โหลดนักเรียนไม่สำเร็จ');
+      const list = (sRes.data || []).map(window.mapStudent);
+      const st = {}, nt = {};
+      list.forEach(s => { st[s.rawId] = 'present'; });
+      (aRes.data || []).forEach(r => { st[r.student_id] = r.status; if (r.note) nt[r.student_id] = r.note; });
+      setStudents(list); setStatuses(st); setNotes(nt);
+    } catch (e) { setLoadError(e.message); }
+    finally { setLoading(false); }
+  }
+  useEffect_M(() => { load(); }, [classroom]);
 
   const counts = useMemo_M(() => {
     const c = { present: 0, absent: 0, leave: 0, late: 0 };
-    Object.values(statuses).forEach(s => c[s]++);
+    students.forEach(s => { const st = statuses[s.rawId] || 'present'; if (c[st] !== undefined) c[st]++; });
     return c;
-  }, [statuses]);
+  }, [statuses, students]);
   const notPresent = counts.absent + counts.leave + counts.late;
 
-  const filtered = window.D.STUDENTS_P3_1.filter(s => {
-    if (filter !== 'all' && statuses[s.no] !== filter) return false;
-    if (query && !(`${s.fname} ${s.lname} ${s.no}`).includes(query)) return false;
+  const filtered = students.filter(s => {
+    const st = statuses[s.rawId] || 'present';
+    if (filter !== 'all' && st !== filter) return false;
+    if (query && !((s.prefix + s.fname + ' ' + s.lname + ' ' + s.nickname).includes(query))) return false;
     return true;
   });
 
-  const setStatus = (no, st) => setStatuses(p => ({ ...p, [no]: st }));
-  const setNote = (no, n) => setNotes(p => ({ ...p, [no]: n }));
+  const setStatus = (id, st) => setStatuses(p => ({ ...p, [id]: st }));
+  const setNote = (id, n) => setNotes(p => ({ ...p, [id]: n }));
   const resetAll = () => {
-    const init = {}; window.D.STUDENTS_P3_1.forEach(s => { init[s.no] = 'present'; });
+    const init = {}; students.forEach(s => { init[s.rawId] = 'present'; });
     setStatuses(init); setNotes({});
   };
-  const flagged = window.D.STUDENTS_P3_1.filter(s => statuses[s.no] !== 'present');
+  const flagged = students.filter(s => (statuses[s.rawId] || 'present') !== 'present');
+
+  async function doSave() {
+    setSaving(true);
+    try {
+      const records = students.map(s => ({
+        student_id: s.rawId,
+        status: statuses[s.rawId] || 'present',
+        note: notes[s.rawId] || ''
+      }));
+      const res = await window.apiCall({
+        action: 'bulkMarkAttendance', token: window.getToken(),
+        data: { date: todayISO, period: '', records }
+      });
+      if (!res.success) throw new Error(res.message || 'บันทึกไม่สำเร็จ');
+      setShowSend(false);
+      setSuccess({ counts, flagged: flagged.length, saved: res.data, date: todayISO });
+    } catch (e) { alert('บันทึกไม่สำเร็จ: ' + e.message); }
+    finally { setSaving(false); }
+  }
 
   return (
     <div className={`attendance-page ${isMobile ? 'mobile' : ''}`}>
@@ -1950,16 +1989,13 @@ function AttendancePage({ navigate, isMobile }) {
           <button className="att-back" onClick={() => navigate('home')}>{window.ICONS.chevL}</button>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="att-title">เช็คชื่อ · ป.3/1</div>
-          <div className="att-sub">{window.D.SCHOOL.todayLabel.split(' ').slice(-3).join(' ')} · 25 คน</div>
+          <div className="att-title">เช็คชื่อ · {classroom}</div>
+          <div className="att-sub">{todayISO} · {students.length} คน</div>
         </div>
-        <select className="att-period-select" value={periodIdx} onChange={e => setPeriodIdx(+e.target.value)}>
-          {window.D.TODAY_SCHEDULE.map((p, i) => (
-            <option key={i} value={i}>
-              คาบ {p.period} · {p.subject} {p.completed ? '✓' : p.current ? '· กำลังเรียน' : ''}
-            </option>
-          ))}
+        <select className="att-period-select" value={classroom} onChange={e => setClassroom(e.target.value)}>
+          {window.D.CLASSROOMS.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
         </select>
+        <button className="btn btn-outline btn-sm" style={{ marginLeft: 8 }} onClick={() => setShowHistory(true)}>ประวัติ</button>
       </div>
 
       {/* Progress bar */}
@@ -1980,12 +2016,12 @@ function AttendancePage({ navigate, isMobile }) {
 
       {/* Filter chips + bulk + search */}
       <div className="att-filters scroll-x no-scrollbar">
-        <button className={`chip ${filter==='all'?'active':''}`} onClick={() => setFilter('all')}>ทั้งหมด · {window.D.STUDENTS_P3_1.length}</button>
+        <button className={`chip ${filter==='all'?'active':''}`} onClick={() => setFilter('all')}>ทั้งหมด · {students.length}</button>
         <button className={`chip ${filter==='absent'?'active':''}`} onClick={() => setFilter(filter==='absent'?'all':'absent')}>ขาด · {counts.absent}</button>
         <button className={`chip ${filter==='leave'?'active':''}`} onClick={() => setFilter(filter==='leave'?'all':'leave')}>ลา · {counts.leave}</button>
         <button className={`chip ${filter==='late'?'active':''}`} onClick={() => setFilter(filter==='late'?'all':'late')}>สาย · {counts.late}</button>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button className="chip" onClick={resetAll}>{window.ICONS.refresh} รีเซ็ต</button>
+          <button className="chip" onClick={resetAll}>รีเซ็ต</button>
         </span>
       </div>
 
@@ -2000,31 +2036,33 @@ function AttendancePage({ navigate, isMobile }) {
 
       {/* Student rows */}
       <div className="att-list scroll-y">
-        {filtered.length === 0 ? (
-          <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-subtle)' }}>ไม่พบนักเรียนตามเงื่อนไข</div>
-        ) : filtered.map(s => (
-          <StudentAttRow key={s.no} student={s} status={statuses[s.no]} note={notes[s.no] || ''}
-            setStatus={(st) => setStatus(s.no, st)} setNote={(n) => setNote(s.no, n)}/>
+        {loading && <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>กำลังโหลด…</div>}
+        {loadError && <div style={{ margin: 12, padding: 12, background: 'var(--absent-soft)', color: 'var(--absent-strong)', borderRadius: 8, fontSize: 13 }}>โหลดไม่สำเร็จ: {loadError} <button className="btn btn-sm btn-outline" style={{ marginLeft: 8 }} onClick={load}>ลองใหม่</button></div>}
+        {!loading && !loadError && filtered.length === 0 && (
+          <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-subtle)' }}>{students.length === 0 ? 'ห้องนี้ยังไม่มีนักเรียน' : 'ไม่พบนักเรียนตามเงื่อนไข'}</div>
+        )}
+        {!loading && !loadError && filtered.map(s => (
+          <StudentAttRow key={s.id} student={s} status={statuses[s.rawId] || 'present'} note={notes[s.rawId] || ''}
+            setStatus={(st) => setStatus(s.rawId, st)} setNote={(n) => setNote(s.rawId, n)}/>
         ))}
       </div>
 
       {/* CTA dock */}
       <div className="att-cta-dock">
-        <button className="att-cta" disabled={notPresent === 0 && !window.D.STUDENTS_P3_1.find(s => statuses[s.no] !== 'present')}
+        <button className="att-cta" disabled={saving || loading || students.length === 0}
           onClick={() => setShowSend(true)}>
-          {window.ICONS.send}
-          {notPresent === 0
-            ? 'ทุกคนมาครบ — บันทึก'
-            : <>บันทึก & ส่ง LINE <span className="badge tnum">{notPresent} คน</span></>}
+          {saving ? 'กำลังบันทึก…' :
+            notPresent === 0 ? 'ทุกคนมาครบ — บันทึก' : <>บันทึก <span className="badge tnum">{notPresent} ไม่มา</span></>}
         </button>
       </div>
 
       {showSend && (
-        <SendConfirmSheet flagged={flagged} statuses={statuses} period={period}
+        <SendConfirmSheet flagged={flagged} statuses={statuses} saving={saving}
           onClose={() => setShowSend(false)}
-          onConfirm={() => { setShowSend(false); setSuccess({ counts, period, flagged: flagged.length }); }}/>
+          onConfirm={doSave}/>
       )}
-      {success && <AttSuccessOverlay data={success} onClose={() => { setSuccess(null); navigate('home'); }}/>}
+      {success && <AttSuccessOverlay data={success} onClose={() => { setSuccess(null); load(); }}/>}
+      {showHistory && <AttendanceHistorySheet classroom={classroom} onClose={() => setShowHistory(false)}/>}
     </div>
   );
 }
@@ -2033,13 +2071,11 @@ function StudentAttRow({ student, status, note, setStatus, setNote }) {
   const showNote = status === 'leave' || status === 'absent';
   return (
     <>
-      <div className={`att-row ${student.alert ? 'alert' : ''}`}>
-        <div className="att-no tnum">{String(student.no).padStart(2, '0')}</div>
+      <div className="att-row">
+        <div className="att-no tnum">{String(student.studentCode || student.rawId).slice(-3)}</div>
         <div className="att-name">
-          <div className="att-name-n">{student.prefix}{student.fname} {student.lname}</div>
-          {student.alert
-            ? <div className="att-name-m warn">⚠ ขาดติดต่อกัน {student.absentStreak} วัน</div>
-            : status !== 'present' && <div className="att-name-m">จะแจ้งผู้ปกครองทาง LINE</div>}
+          <div className="att-name-n">{student.prefix}{student.fname} {student.lname}{student.nickname && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> ({student.nickname})</span>}</div>
+          {status !== 'present' && <div className="att-name-m">จะแจ้งผู้ปกครองทาง LINE</div>}
         </div>
         <div className="seg-control">
           {['present', 'absent', 'leave', 'late'].map(s => (
@@ -2059,32 +2095,113 @@ function StudentAttRow({ student, status, note, setStatus, setNote }) {
   );
 }
 
-function SendConfirmSheet({ flagged, statuses, period, onClose, onConfirm }) {
+function SendConfirmSheet({ flagged, statuses, saving, onClose, onConfirm }) {
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={e => e.stopPropagation()}>
         <div className="sheet-handle"/>
-        <div className="sheet-title">ยืนยันการส่งแจ้งเตือน</div>
+        <div className="sheet-title">ยืนยันการบันทึก</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '0 20px 12px' }}>
-          ระบบจะส่ง LINE หาผู้ปกครอง {flagged.length} คน (เฉพาะคนที่ไม่ได้มา)
+          {flagged.length === 0
+            ? 'ทุกคนมาครบ — บันทึกได้เลย'
+            : `ไม่มา ${flagged.length} คน (จะส่ง LINE ผู้ปกครองทีหลังเมื่อระบบเชื่อมต่อ)`}
         </div>
-        <div style={{ padding: '0 20px', overflow: 'auto', flex: 1 }}>
-          <div style={{ background: 'var(--primary-tint)', border: '1px solid var(--primary-soft-strong)', borderRadius: 10, padding: 10, fontSize: 12, color: 'var(--primary)', marginBottom: 8 }}>
-            ใช้โควต้า LINE {flagged.length} ข้อความ · เหลือ {window.D.SCHOOL.lineQuotaTotal - window.D.SCHOOL.lineQuotaUsed - flagged.length} ข้อความเดือนนี้
+        {flagged.length > 0 && (
+          <div style={{ padding: '0 20px', overflow: 'auto', flex: 1 }}>
+            <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: 4 }}>
+              {flagged.map(s => (
+                <div key={s.id} style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, borderBottom: '1px solid var(--divider)' }}>
+                  <span style={{ flex: 1 }}>{s.prefix}{s.fname} {s.lname}{s.nickname && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> ({s.nickname})</span>}</span>
+                  <span className="status" data-s={statuses[s.rawId]}>{{ absent: 'ขาด', leave: 'ลา', late: 'สาย' }[statuses[s.rawId]]}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: 4 }}>
-            {flagged.map(s => (
-              <div key={s.no} style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, borderBottom: '1px solid var(--divider)' }}>
-                <span className="tnum" style={{ width: 24, color: 'var(--text-subtle)', fontSize: 12 }}>{s.no}</span>
-                <span style={{ flex: 1 }}>{s.prefix}{s.fname} {s.lname}</span>
-                <span className="status" data-s={statuses[s.no]}>{{ absent: 'ขาด', leave: 'ลา', late: 'สาย' }[statuses[s.no]]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
         <div style={{ padding: '14px 20px 0', display: 'flex', gap: 8 }}>
-          <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>กลับไปแก้</button>
-          <button className="btn btn-primary" style={{ flex: 1 }} onClick={onConfirm}>{window.ICONS.send} ส่งเลย</button>
+          <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose} disabled={saving}>กลับไปแก้</button>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={onConfirm} disabled={saving}>{saving ? 'กำลังบันทึก…' : 'บันทึก'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Attendance History Sheet (Phase 2.B.7) ─────────
+function AttendanceHistorySheet({ classroom, onClose }) {
+  const [days, setDays] = useState_M([]);
+  const [loading, setLoading] = useState_M(true);
+  const [err, setErr] = useState_M(null);
+
+  useEffect_M(() => {
+    (async () => {
+      setLoading(true); setErr(null);
+      try {
+        // Past 7 weekdays starting today, going back
+        const dates = [];
+        const d = new Date(); d.setHours(0, 0, 0, 0);
+        while (dates.length < 7) {
+          const dow = d.getDay();
+          if (dow !== 0 && dow !== 6) dates.push(d.toISOString().substring(0, 10));
+          d.setDate(d.getDate() - 1);
+        }
+        const results = await Promise.all(dates.map(date =>
+          window.apiCall({ action: 'getAttendance', token: window.getToken(), date, classroom, period: '' })
+        ));
+        const out = dates.map((date, i) => {
+          const recs = (results[i].data || []);
+          const c = { present: 0, absent: 0, leave: 0, late: 0 };
+          recs.forEach(r => { if (c[r.status] !== undefined) c[r.status]++; });
+          const flagged = recs.filter(r => r.status !== 'present');
+          return { date, recs, counts: c, flagged, total: recs.length };
+        });
+        setDays(out);
+      } catch (e) { setErr(e.message); }
+      finally { setLoading(false); }
+    })();
+  }, [classroom]);
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '85vh' }}>
+        <div className="sheet-handle"/>
+        <div className="sheet-title">ประวัติเช็คชื่อ · {classroom}</div>
+        <div style={{ padding: '0 20px 18px', overflowY: 'auto', flex: 1 }}>
+          {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)' }}>กำลังโหลด 7 วันล่าสุด…</div>}
+          {err && <div style={{ padding: 14, background: 'var(--absent-soft)', color: 'var(--absent-strong)', borderRadius: 8, fontSize: 13 }}>โหลดไม่สำเร็จ: {err}</div>}
+          {!loading && !err && days.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)' }}>ยังไม่มีข้อมูล</div>}
+          {!loading && !err && days.map(d => (
+            <div key={d.date} style={{ padding: 14, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{d.date}</div>
+                <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{d.total} รายการ</div>
+              </div>
+              {d.total === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>ยังไม่มีการเช็คชื่อ</div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: 14, fontSize: 13, marginBottom: d.flagged.length > 0 ? 8 : 0 }}>
+                    <span style={{ color: 'var(--present-strong)', fontWeight: 600 }}>มา {d.counts.present}</span>
+                    <span style={{ color: 'var(--absent)', fontWeight: 600 }}>ขาด {d.counts.absent}</span>
+                    <span style={{ color: 'var(--leave-strong)', fontWeight: 600 }}>ลา {d.counts.leave}</span>
+                    <span style={{ color: 'var(--late-strong)', fontWeight: 600 }}>สาย {d.counts.late}</span>
+                  </div>
+                  {d.flagged.length > 0 && (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {d.flagged.map(r => (
+                        <span key={r.id} className="status" data-s={r.status}>
+                          {r.student_nickname || r.student_name}{r.note ? ' · ' + r.note : ''}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: '12px 20px 0' }}>
+          <button className="btn btn-outline" style={{ width: '100%' }} onClick={onClose}>ปิด</button>
         </div>
       </div>
     </div>

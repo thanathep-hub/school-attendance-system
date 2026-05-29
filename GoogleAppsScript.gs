@@ -76,6 +76,14 @@ function initializeSheets() {
     ]);
   }
 
+  // Create attendance sheet (Phase 2.B)
+  const attendanceSheet = getOrCreateSheet(SHEETS.ATTENDANCE);
+  if (attendanceSheet.getLastRow() === 0) {
+    attendanceSheet.appendRow([
+      'id', 'date', 'period', 'student_id', 'status', 'note', 'recorded_by', 'recorded_at'
+    ]);
+  }
+
   // Seed demo data if empty
   const users = sheetToArray(SHEETS.USERS);
   if (users.length === 0) {
@@ -178,6 +186,12 @@ function doPost(e) {
       return handleUpdateStudent(request.token, request.studentId, request.data);
     } else if (action === 'deleteStudent') {
       return handleDeleteStudent(request.token, request.studentId, request.hardDelete);
+    } else if (action === 'getAttendance') {
+      return handleGetAttendance(request.token, request.date, request.classroom, request.period);
+    } else if (action === 'markAttendance') {
+      return handleMarkAttendance(request.token, request.data);
+    } else if (action === 'bulkMarkAttendance') {
+      return handleBulkMarkAttendance(request.token, request.data);
     } else {
       return formatResponse(false, 'Unknown action: ' + action);
     }
@@ -438,6 +452,184 @@ function handleDeleteStudent(token, studentId, hardDelete) {
   // Soft delete: set active (column 12, 1-indexed) to false
   studentsSheet.getRange(rowIndex, 12).setValue(false);
   return formatResponse(true, 'Student deactivated');
+}
+
+// ═══════════════════════════════════════════════════════
+// Attendance Handlers (Phase 2.B)
+// ═══════════════════════════════════════════════════════
+
+// ─── Helper: Extract user_id from token (no expiry check) ────
+function tokenToUserId(token) {
+  if (!token) return null;
+  try {
+    const decoded = Utilities.newBlob(Utilities.base64Decode(token)).getDataAsString();
+    const parts = decoded.split(':');
+    if (parts.length !== 3) return null;
+    return parts[0];
+  } catch (e) { return null; }
+}
+
+// ─── Helper: Find attendance row by composite key (date, period, student_id) ──
+// Columns: 0=id, 1=date, 2=period, 3=student_id, 4=status, 5=note, 6=recorded_by, 7=recorded_at
+function findAttendanceRowIndex(date, period, studentId) {
+  const sheet = getOrCreateSheet(SHEETS.ATTENDANCE);
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return -1;
+  const p = String(period || '');
+  for (let i = 1; i < data.length; i++) {
+    // Date in sheet may be Date object or string; normalize to YYYY-MM-DD prefix match
+    const rowDate = data[i][1] instanceof Date
+      ? Utilities.formatDate(data[i][1], 'GMT', 'yyyy-MM-dd')
+      : String(data[i][1]).substring(0, 10);
+    if (rowDate === date && String(data[i][2]) === p && String(data[i][3]) === String(studentId)) {
+      return i + 1;
+    }
+  }
+  return -1;
+}
+
+// ─── Handler: Get Attendance ─────────────────────────
+// Returns attendance records for a given date. Optional filter by classroom + period.
+// Each record is enriched with student info (name, nickname, classroom) for UI convenience.
+function handleGetAttendance(token, date, classroom, period) {
+  if (!token) return formatResponse(false, 'Unauthorized');
+  if (!date) return formatResponse(false, 'Missing date (YYYY-MM-DD)');
+
+  const all = sheetToArray(SHEETS.ATTENDANCE);
+  const p = (period !== undefined && period !== null) ? String(period) : null;
+
+  // Filter by date (string startsWith allows date or full ISO)
+  let recs = all.filter(function(a) {
+    const aDate = a.date instanceof Date
+      ? Utilities.formatDate(a.date, 'GMT', 'yyyy-MM-dd')
+      : String(a.date).substring(0, 10);
+    if (aDate !== date) return false;
+    if (p !== null && String(a.period) !== p) return false;
+    return true;
+  });
+
+  // Build student lookup
+  const students = sheetToArray(SHEETS.STUDENTS);
+  const studentMap = {};
+  students.forEach(function(s) { studentMap[String(s.id)] = s; });
+
+  // Optional classroom filter
+  if (classroom) {
+    recs = recs.filter(function(a) {
+      const s = studentMap[String(a.student_id)];
+      return s && s.classroom === classroom;
+    });
+  }
+
+  // Enrich
+  const enriched = recs.map(function(a) {
+    const s = studentMap[String(a.student_id)] || {};
+    return {
+      id: a.id,
+      date: (a.date instanceof Date ? Utilities.formatDate(a.date, 'GMT', 'yyyy-MM-dd') : String(a.date).substring(0,10)),
+      period: a.period || '',
+      student_id: a.student_id,
+      student_name: s.name || '',
+      student_nickname: s.nickname || '',
+      classroom: s.classroom || '',
+      status: a.status,
+      note: a.note || '',
+      recorded_by: a.recorded_by,
+      recorded_at: a.recorded_at,
+    };
+  });
+
+  return formatResponse(true, 'Attendance list', enriched);
+}
+
+// ─── Handler: Mark Attendance (single, upsert) ────────
+// data: { student_id, date, status, note?, period? }
+// status must be one of: present, absent, leave, late
+function handleMarkAttendance(token, data) {
+  if (!token) return formatResponse(false, 'Unauthorized');
+  if (!data) return formatResponse(false, 'Missing data');
+  const { student_id, date, status, note, period } = data;
+  if (!student_id || !date || !status) return formatResponse(false, 'Missing required: student_id, date, status');
+
+  const validStatuses = ['present', 'absent', 'leave', 'late'];
+  if (validStatuses.indexOf(status) === -1) return formatResponse(false, 'Invalid status (must be present/absent/leave/late)');
+
+  const sheet = getOrCreateSheet(SHEETS.ATTENDANCE);
+  const userId = tokenToUserId(token) || '';
+  const now = new Date().toISOString();
+  const p = period || '';
+  const rowIndex = findAttendanceRowIndex(date, p, student_id);
+
+  if (rowIndex !== -1) {
+    const row = sheet.getRange(rowIndex, 1, 1, 8).getValues()[0];
+    row[4] = status;
+    if (note !== undefined) row[5] = note;
+    row[6] = userId;
+    row[7] = now;
+    sheet.getRange(rowIndex, 1, 1, 8).setValues([row]);
+    return formatResponse(true, 'Attendance updated', { id: row[0], action: 'updated' });
+  }
+
+  const all = sheetToArray(SHEETS.ATTENDANCE);
+  const newId = Math.max(0, ...all.map(function(a) { return parseInt(a.id) || 0; })) + 1;
+  sheet.appendRow([newId, date, p, student_id, status, note || '', userId, now]);
+  return formatResponse(true, 'Attendance created', { id: newId, action: 'created' });
+}
+
+// ─── Handler: Bulk Mark Attendance ──────────────────
+// data: { date, period?, records: [{student_id, status, note?}] }
+// Upserts each row efficiently. Returns counts.
+function handleBulkMarkAttendance(token, data) {
+  if (!token) return formatResponse(false, 'Unauthorized');
+  if (!data) return formatResponse(false, 'Missing data');
+  const { date, period, records } = data;
+  if (!date || !Array.isArray(records)) return formatResponse(false, 'Missing required: date, records[]');
+
+  const validStatuses = ['present', 'absent', 'leave', 'late'];
+  const sheet = getOrCreateSheet(SHEETS.ATTENDANCE);
+  const userId = tokenToUserId(token) || '';
+  const now = new Date().toISOString();
+  const p = period || '';
+
+  // Build index map for fast upsert
+  const sheetData = sheet.getDataRange().getValues();
+  const indexMap = {};
+  for (let i = 1; i < sheetData.length; i++) {
+    const rowDate = sheetData[i][1] instanceof Date
+      ? Utilities.formatDate(sheetData[i][1], 'GMT', 'yyyy-MM-dd')
+      : String(sheetData[i][1]).substring(0, 10);
+    const key = rowDate + '|' + String(sheetData[i][2]) + '|' + String(sheetData[i][3]);
+    indexMap[key] = i + 1;
+  }
+
+  let nextId = 1;
+  for (let i = 1; i < sheetData.length; i++) {
+    const id = parseInt(sheetData[i][0]) || 0;
+    if (id >= nextId) nextId = id + 1;
+  }
+
+  let created = 0, updated = 0, skipped = 0;
+  records.forEach(function(r) {
+    if (!r.student_id || !r.status || validStatuses.indexOf(r.status) === -1) { skipped++; return; }
+    const key = date + '|' + p + '|' + String(r.student_id);
+    const rowIndex = indexMap[key];
+    if (rowIndex) {
+      const row = sheet.getRange(rowIndex, 1, 1, 8).getValues()[0];
+      row[4] = r.status;
+      if (r.note !== undefined) row[5] = r.note;
+      row[6] = userId;
+      row[7] = now;
+      sheet.getRange(rowIndex, 1, 1, 8).setValues([row]);
+      updated++;
+    } else {
+      sheet.appendRow([nextId, date, p, r.student_id, r.status, r.note || '', userId, now]);
+      indexMap[key] = sheet.getLastRow();
+      nextId++;
+      created++;
+    }
+  });
+
+  return formatResponse(true, 'Bulk attendance saved', { created: created, updated: updated, skipped: skipped, total: records.length });
 }
 
 // ─── Helper: Format Response ───────────────────────
