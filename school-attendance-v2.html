@@ -2820,4 +2820,14 @@ function App() {
         )}
       </div>
 
-      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} navigate={naviga
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} navigate={navigate} route={route}
+        theme={theme} setTheme={setTheme} user={session} onLogout={logout}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+</script>
+</body>
+</html>
